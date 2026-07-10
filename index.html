@@ -160,8 +160,24 @@
         .blinking { animation: blink 1s infinite; }
         @keyframes breathe { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
         .breathe { animation: breathe 2s infinite ease-in-out; }
+        
+        /* Animação padrão (NPCs) */
         @keyframes dance { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-6px) rotate(2deg); } }
         .dancing { animation: dance 0.4s infinite; }
+        
+        /* NOVA ANIMAÇÃO: Dança exclusiva do protagonista (Caio) */
+        @keyframes caioDancePro {
+            0%, 100% { transform: translateY(0) scale(1) rotate(0deg); filter: drop-shadow(0 0 10px #ff0055); }
+            25% { transform: translateY(-20px) scale(1.1) rotate(-15deg); filter: drop-shadow(0 0 20px #00d4ff); }
+            50% { transform: translateY(-5px) scale(1.05) rotate(0deg); filter: drop-shadow(0 0 15px #ffea00); }
+            75% { transform: translateY(-25px) scale(1.15) rotate(15deg); filter: drop-shadow(0 0 25px #00ff00); }
+        }
+        .player-dancing {
+            animation: caioDancePro 0.6s infinite ease-in-out;
+            position: relative;
+            z-index: 30 !important;
+        }
+
         @keyframes wildDance { 0%, 100% { transform: translateY(0) rotate(0deg); } 25% { transform: translateY(-12px) rotate(5deg); } 75% { transform: translateY(8px) rotate(-5deg); } }
         .wild-dancing { animation: wildDance 0.2s infinite; }
         @keyframes dressEffect { 0%, 100% { transform: scale(1); filter: brightness(1); } 50% { transform: scale(1.05); filter: brightness(1.3); } }
@@ -768,6 +784,7 @@
         typeText(text, callback = null) {
             if (ESTADO.typing) return;
             ESTADO.typing = true; ESTADO.skipTyping = false;
+            
             const el = document.getElementById('dialog-area');
             const menuArea = document.getElementById('menu-area');
             
@@ -779,36 +796,51 @@
                 menuArea.style.height = '60%';
             }
 
-            el.textContent = ''; el.classList.add('cursor');
+            el.textContent = ''; 
+            el.classList.add('cursor');
             menuArea.innerHTML = '';
 
             const runner = async () => {
-                for (let i = 0; i < text.length; i++) {
-                    if (ESTADO.skipTyping) { el.textContent = text; break; }
-                    el.textContent += text.charAt(i);
-                    if (i % 3 === 0 && text.charAt(i) !== ' ') AUDIO.playSfx('type');
-                    el.scrollTop = el.scrollHeight;
-                    await new Promise((r) => setTimeout(r, CONFIG.velocidade_texto_ms));
-                }
-                el.classList.remove('cursor');
-                ESTADO.typing = false;
-                
-                if (callback) {
-                    ESTADO.waitingNext = true;
-                    const arrow = document.createElement('span');
-                    arrow.className = 'blinking';
-                    arrow.style.color = '#ffea00';
-                    arrow.style.cursor = 'pointer';
-                    arrow.innerText = ' ▼';
-                    el.appendChild(arrow);
+                try {
+                    for (let i = 0; i < text.length; i++) {
+                        if (ESTADO.skipTyping) { 
+                            el.textContent = text; 
+                            break; 
+                        }
+                        
+                        el.textContent += text.charAt(i);
+                        
+                        if (i % 3 === 0 && text.charAt(i) !== ' ') {
+                            try { AUDIO.playSfx('type'); } catch(e) {} 
+                        }
+                        
+                        el.scrollTop = el.scrollHeight;
+                        await new Promise((r) => setTimeout(r, CONFIG.velocidade_texto_ms));
+                    }
+                } catch (erroCritico) {
+                    console.error("Falha no renderizador de texto:", erroCritico);
+                    el.textContent = text; 
+                } finally {
+                    el.classList.remove('cursor');
+                    ESTADO.typing = false;
                     
-                    ESTADO.resolveNext = () => {
-                        ESTADO.waitingNext = false;
-                        if(arrow.parentNode) arrow.remove();
-                        el.style.height = '40%';
-                        menuArea.style.height = '60%';
-                        callback();
-                    };
+                    if (callback) {
+                        ESTADO.waitingNext = true;
+                        const arrow = document.createElement('span');
+                        arrow.className = 'blinking';
+                        arrow.style.color = '#ffea00';
+                        arrow.style.cursor = 'pointer';
+                        arrow.innerText = ' ▼';
+                        el.appendChild(arrow);
+                        
+                        ESTADO.resolveNext = () => {
+                            ESTADO.waitingNext = false;
+                            if(arrow.parentNode) arrow.remove();
+                            el.style.height = '40%';
+                            menuArea.style.height = '60%';
+                            callback();
+                        };
+                    }
                 }
             };
             runner();
@@ -971,9 +1003,14 @@
         }
     };
 
-    document.getElementById('game-device').addEventListener('pointerdown', () => { 
-        if (ESTADO.typing && CONFIG.avanco_rapido_texto_ON) ESTADO.skipTyping = true; 
-        else if (ESTADO.waitingNext) ESTADO.resolveNext();
+    document.getElementById('game-device').addEventListener('pointerdown', (e) => { 
+        if (ESTADO.typing && CONFIG.avanco_rapido_texto_ON) {
+            ESTADO.skipTyping = true; 
+            e.preventDefault();
+        } else if (ESTADO.waitingNext) {
+            ESTADO.resolveNext();
+            e.preventDefault();
+        }
     });
 
     const CENAS = {
@@ -1222,7 +1259,7 @@
                 stage.appendChild(container);
 
                 let danceElements = [];
-                danceElements.push({ type: 'caio', html: `<div class="dance-mini-sprite dancing">${BANCO_PERSONAGENS.construirCaioSVG(false)}</div>` });
+                danceElements.push({ type: 'caio', html: `<div class="dance-mini-sprite player-dancing">${BANCO_PERSONAGENS.construirCaioSVG(false)}</div>` });
 
                 const alvos = [...CONFIG_FESTA.alvos_na_pista];
                 for (let i = 0; i < alvos.length; i++) {
@@ -1296,7 +1333,7 @@
                 stage.appendChild(container);
 
                 const npc = BANCO_PERSONAGENS.TARGETS[targetId];
-                container.innerHTML = `<div class="dance-mini-sprite dancing">${BANCO_PERSONAGENS.construirCaioSVG(false)}</div><div class="dance-mini-sprite dancing"><svg viewBox="0 0 80 128" style="overflow:visible;">${npc.svg_codigo || npc.svg}</svg></div>`;
+                container.innerHTML = `<div class="dance-mini-sprite player-dancing">${BANCO_PERSONAGENS.construirCaioSVG(false)}</div><div class="dance-mini-sprite dancing"><svg viewBox="0 0 80 128" style="overflow:visible;">${npc.svg_codigo || npc.svg}</svg></div>`;
                 await new Promise((r) => setTimeout(r, 4000)); container.remove();
 
                 caioOriginal.style.display = 'block'; npcOriginal.style.display = 'block'; MOTOR.atualizarFundo('bg-party');
@@ -1317,15 +1354,14 @@
                 const npc2 = BANCO_PERSONAGENS.TARGETS[id2];
                 container.innerHTML = `
                     <div class="dance-mini-sprite dancing" style="flex:1; max-width:80px;"><svg viewBox="0 0 80 128" style="width:100%;height:auto;overflow:visible;">${npc1.svg_codigo || npc1.svg}</svg></div>
-                    <div class="dance-mini-sprite dancing" style="flex:1; max-width:80px;">${BANCO_PERSONAGENS.construirCaioSVG(false)}</div>
+                    <div class="dance-mini-sprite player-dancing" style="flex:1; max-width:80px;">${BANCO_PERSONAGENS.construirCaioSVG(false)}</div>
                     <div class="dance-mini-sprite dancing" style="flex:1; max-width:80px;"><svg viewBox="0 0 80 128" style="width:100%;height:auto;overflow:visible;">${npc2.svg_codigo || npc2.svg}</svg></div>
                 `;
                 await new Promise((r) => setTimeout(r, 4000));
                 
-                // Mantém na tela sem classe 'dancing' para a leitura do texto
                 container.innerHTML = `
                     <div class="dance-mini-sprite" style="flex:1; max-width:80px;"><svg viewBox="0 0 80 128" style="width:100%;height:auto;overflow:visible;">${npc1.svg_codigo || npc1.svg}</svg></div>
-                    <div class="dance-mini-sprite" style="flex:1; max-width:80px;">${BANCO_PERSONAGENS.construirCaioSVG(false)}</div>
+                    <div class="dance-mini-sprite player-dancing" style="flex:1; max-width:80px;">${BANCO_PERSONAGENS.construirCaioSVG(false)}</div>
                     <div class="dance-mini-sprite" style="flex:1; max-width:80px;"><svg viewBox="0 0 80 128" style="width:100%;height:auto;overflow:visible;">${npc2.svg_codigo || npc2.svg}</svg></div>
                 `;
                 MOTOR.atualizarFundo('bg-party');
@@ -1679,7 +1715,7 @@
             ativa: true,
             iniciar: () => {
                 ESTADO.uiBlocked = false; 
-                AUDIO.stopAll(); AUDIO.playAfterMusic();
+                AUDIO.playAfterMusic();
                 MOTOR.atualizarFundo('bg-after'); document.getElementById('party-fx').style.display = 'block';
                 document.getElementById('caio-sprite').style.display = 'none'; document.getElementById('npc-sprite').style.display = 'none';
 
@@ -1722,7 +1758,6 @@
         'final_dark_room': {
             ativa: true,
             iniciar: (targetId) => {
-                AUDIO.stopAll();
                 AUDIO.playUber(); 
                 MOTOR.atualizarFundo('bg-void'); 
                 document.getElementById('party-fx').style.display = 'none';
@@ -1733,7 +1768,7 @@
                 scene.style.position = 'absolute'; scene.style.inset = '0';
                 scene.style.display = 'flex'; scene.style.justifyContent = 'center'; scene.style.alignItems = 'center';
                 
-                const target = BANCO_PERSONAGENS.TARGETS[targetId];
+                const target = BANCO_PERSONAGENS.TARGETS[targetId] || BANCO_PERSONAGENS.TARGETS['ruivo'];
 
                 scene.innerHTML = `
                     <div class="dark-room-bump-left" style="filter: brightness(0) drop-shadow(0 0 10px rgba(255,0,0,0.5)); z-index:2; width: 150px;">
@@ -1758,9 +1793,10 @@
                 const ts = document.getElementById('trisal-stage');
                 if (ts) ts.remove();
 
-                AUDIO.stopAll(); AUDIO.playBGM('happy'); ESTADO.isHigh = false;
-                const t1 = BANCO_PERSONAGENS.TARGETS[alvos.id1];
-                const t2 = BANCO_PERSONAGENS.TARGETS[alvos.id2];
+                AUDIO.playBGM('happy'); ESTADO.isHigh = false;
+                const t1 = BANCO_PERSONAGENS.TARGETS[alvos.id1] || BANCO_PERSONAGENS.TARGETS['ruivo'];
+                const t2 = BANCO_PERSONAGENS.TARGETS[alvos.id2] || BANCO_PERSONAGENS.TARGETS['loiro'];
+                
                 MOTOR.atualizarFundo('bg-bedroom'); document.getElementById('party-fx').style.display = 'none';
                 document.getElementById('caio-sprite').style.display = 'none'; document.getElementById('npc-sprite').style.display = 'none';
 
@@ -1817,8 +1853,8 @@
         'final_cama': {
             ativa: true,
             iniciar: (targetId) => {
-                AUDIO.stopAll(); AUDIO.playBGM('happy'); ESTADO.isHigh = false;
-                const target = BANCO_PERSONAGENS.TARGETS[targetId];
+                AUDIO.playBGM('happy'); ESTADO.isHigh = false;
+                const target = BANCO_PERSONAGENS.TARGETS[targetId] || BANCO_PERSONAGENS.TARGETS['ruivo'];
                 MOTOR.atualizarFundo('bg-bedroom'); document.getElementById('party-fx').style.display = 'none';
                 document.getElementById('caio-sprite').style.display = 'none'; document.getElementById('npc-sprite').style.display = 'none';
 
