@@ -53,7 +53,7 @@
         #hud {
             height: 6%; background: linear-gradient(to bottom, var(--ui-bg-top), var(--ui-bg-bottom));
             border-bottom: 4px solid var(--ui-border); display: flex; justify-content: space-between;
-            align-items: center; padding: 0 10px; font-size: 8px; z-index: 10; text-shadow: 2px 2px 0 #000;
+            align-items: center; padding: 0 5px; font-size: 8px; z-index: 10; text-shadow: 2px 2px 0 #000;
         }
         #visual-area {
             height: 48%; position: relative; display: flex; justify-content: center;
@@ -262,6 +262,88 @@
         .after-sprite .cigarro { position: absolute; bottom: 30%; right: 20%; font-size: 14px; animation: fumaça 1.5s infinite alternate; z-index: 20; }
         @keyframes fumaça { 0% { opacity: 0.3; transform: translateY(0) scale(0.8); } 100% { opacity: 1; transform: translateY(-8px) scale(1.2); } }
         .after-text { color: #ffd700; font-size: 12px; text-shadow: 0 0 20px #ff8800; text-align: center; animation: blink 1s infinite; position: absolute; top: 20px; width: 100%; z-index: 60; }
+        
+        /* =====================================================================
+           ESTILIZAÇÃO DO TERMINAL DE BATE-PAPO (INTEGRADO)
+           ===================================================================== */
+        #mamba-chat-overlay .chat-container {
+            background: rgba(17, 17, 17, 0.95);
+            border: 2px solid #990000;
+            padding: 15px;
+            width: 90%;
+            max-width: 320px;
+            box-shadow: inset 0 0 15px rgba(255,0,0,0.2), 0 0 20px rgba(0,0,0,0.8);
+            position: relative;
+            color: #ffffff;
+            font-family: 'Press Start 2P', cursive;
+        }
+        #mamba-chat-overlay .chat-container h2 {
+            font-size: 10px;
+            color: #ff0000;
+            text-align: left;
+            margin-top: 0;
+            margin-bottom: 15px;
+            text-shadow: 1px 1px 0 #000;
+        }
+        #mamba-chat-overlay .form-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 8px;
+            margin-bottom: 8px;
+        }
+        #mamba-chat-overlay .form-input {
+            flex: 2;
+            background-color: #333;
+            color: #fff;
+            border: 1px solid #666;
+            padding: 6px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 8px;
+        }
+        #mamba-chat-overlay .form-input:focus {
+            outline: none;
+            border-color: #ff0000;
+            background-color: #222;
+        }
+        #mamba-chat-overlay .btn-action {
+            width: 100%;
+            background-color: #990000;
+            color: #fff;
+            border: 2px outset #ff0000;
+            padding: 8px;
+            font-size: 8px;
+            font-family: 'Press Start 2P', cursive;
+            cursor: pointer;
+            margin-top: 5px;
+            text-transform: uppercase;
+        }
+        #mamba-chat-overlay .btn-action:active {
+            border-style: inset;
+        }
+        #mamba-chat-overlay #chat-room {
+            flex-direction: column;
+        }
+        #mamba-chat-overlay #chat-messages {
+            height: 140px;
+            background-color: #111;
+            border: 1px solid #444;
+            overflow-y: auto;
+            padding: 5px;
+            font-size: 7px;
+            line-height: 1.4;
+            color: #ccc;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        #mamba-chat-overlay .chat-msg {
+            word-wrap: break-word;
+        }
+        #mamba-chat-overlay .chat-msg span.user {
+            color: #ff0000;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -341,7 +423,9 @@
         <div id="creditos-splash">CALEJON 2026</div>
     </div>
 
+    <!-- HUD MODIFICADA COM O BOTÃO DE BATE-PAPO -->
     <div id="hud" style="display: none;">
+        <div id="hud-chat-btn" class="text-red-500 blinking" style="cursor:pointer; z-index:110;" onclick="toggleChat(event)">💬BATE-PAPO</div>
         <div class="text-yellow-400">💰 R$<span id="hud-money">500</span></div>
         <div class="text-cyan-400">🍲 AXÉ:<span id="hud-style">0</span></div>
         <div class="text-green-400">🎒 <span id="hud-inv">Vazio</span></div>
@@ -360,6 +444,30 @@
     <div id="control-panel" style="display: none;">
         <div id="dialog-area"></div>
         <div id="menu-area"></div>
+    </div>
+
+    <!-- OVERLAY DO CHAT MODAL -->
+    <div id="mamba-chat-overlay" onpointerdown="event.stopPropagation()" onclick="event.stopPropagation()" style="display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.7); z-index: 150; justify-content: center; align-items: center;">
+        <div class="chat-container">
+            <button onclick="toggleChat(event)" style="position: absolute; top: 5px; right: 5px; background: red; color: white; border: none; font-family: 'Press Start 2P', cursive; font-size: 8px; cursor: pointer; padding: 5px;">[X]</button>
+            <h2>MAMBA NEGRA P2P</h2>
+            
+            <div id="chat-login">
+                <div class="form-group">
+                    <label for="vag-user">User:</label>
+                    <input type="text" id="vag-user" class="form-input" value="Nobody" maxlength="15">
+                </div>
+                <button class="btn-action" onclick="enterChat()">Conectar (WSS)</button>
+            </div>
+
+            <div id="chat-room" style="display: none;">
+                <div id="chat-messages">
+                    <div class="chat-msg"><i>[Sistema] Autenticando canal...</i></div>
+                </div>
+                <input type="text" id="chat-input" class="form-input" placeholder="Transmitir..." onkeypress="handleKeyPress(event)" style="width: 100%; box-sizing: border-box; margin-top: 5px;">
+                <button class="btn-action" onclick="sendMessage()">Enviar</button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -1923,6 +2031,124 @@
             }
         }
     };
+
+    // =====================================================================
+    // LÓGICA DO TERMINAL P2P (CHAT INTEGRADO)
+    // =====================================================================
+    const topicId = "mamba_negra_terminal_p2p_v3_2026";
+    const wsUrl = `wss://ntfy.sh/${topicId}/ws`;
+    const postUrl = `https://ntfy.sh/${topicId}`;
+    
+    let chatSocket;
+    let chatUser = "Nobody";
+    const renderedMessages = new Set();
+
+    function toggleChat(e) {
+        if(e) e.stopPropagation();
+        const overlay = document.getElementById('mamba-chat-overlay');
+        if (overlay.style.display === 'none') {
+            overlay.style.display = 'flex';
+        } else {
+            overlay.style.display = 'none';
+        }
+    }
+
+    function connectWebSocket() {
+        chatSocket = new WebSocket(wsUrl);
+        
+        chatSocket.onopen = function() {
+            appendChatMessage("Info", "[Sistema] Túnel criptografado estabelecido.");
+        };
+        
+        chatSocket.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            if (data.event === 'message') {
+                try {
+                    const payload = JSON.parse(data.message);
+                    processIncomingChat(payload);
+                } catch (err) {
+                    console.error("Erro ao ler pacote WSS.");
+                }
+            }
+        };
+
+        chatSocket.onclose = function() {
+            setTimeout(connectWebSocket, 3000);
+        };
+    }
+
+    function enterChat() {
+        const userInp = document.getElementById('vag-user').value.trim();
+        if(userInp) chatUser = userInp;
+        
+        document.getElementById('chat-login').style.display = 'none';
+        document.getElementById('chat-room').style.display = 'flex';
+        
+        connectWebSocket();
+
+        const msgId = "sys_" + Date.now().toString() + Math.random().toString(36).substr(2, 5);
+        const payload = {
+            id: msgId,
+            user: "Info",
+            text: `[Sistema] ${chatUser} conectou-se à rede.`,
+            time: Date.now()
+        };
+        publishChatMessage(payload);
+    }
+
+    function handleKeyPress(e) {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    }
+
+    function sendMessage() {
+        const inputField = document.getElementById('chat-input');
+        const text = inputField.value.trim();
+        if (text !== '') {
+            const msgId = Date.now().toString() + Math.random().toString(36).substr(2, 5);
+            const payload = {
+                id: msgId,
+                user: chatUser,
+                text: text,
+                time: Date.now()
+            };
+            
+            publishChatMessage(payload);
+            inputField.value = '';
+        }
+    }
+
+    function publishChatMessage(payload) {
+        processIncomingChat(payload);
+        fetch(postUrl, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        }).catch(err => console.error("Falha WSS.", err));
+    }
+
+    function processIncomingChat(data) {
+        if (!data || !data.id || !data.text) return;
+        if (!renderedMessages.has(data.id)) {
+            renderedMessages.add(data.id);
+            appendChatMessage(data.user, data.text);
+        }
+    }
+
+    function appendChatMessage(user, text) {
+        const messagesDiv = document.getElementById('chat-messages');
+        const newMsg = document.createElement('div');
+        newMsg.className = 'chat-msg';
+        
+        if (user === "Info") {
+            newMsg.innerHTML = `<i style="color:#ff5555;">${text}</i>`;
+        } else {
+            newMsg.innerHTML = `<span class="user">&lt;${user}&gt;</span> ${text}`;
+        }
+        
+        messagesDiv.appendChild(newMsg);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
 </script>
 </body>
 </html>
