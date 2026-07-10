@@ -504,6 +504,37 @@
 </div>
 
 <script>
+    // ================================================================
+    // PROTEÇÃO CONTRA CÓPIA E SALVAMENTO DO CÓDIGO FONTE
+    // ================================================================
+    (function() {
+        // Bloqueia clique direito
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            return false;
+        });
+
+        // Bloqueia teclas de atalho para ferramentas de desenvolvedor e salvar
+        document.addEventListener('keydown', function(e) {
+            // F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U, Ctrl+S
+            if (e.key === 'F12' ||
+                (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J')) ||
+                (e.ctrlKey && e.key === 'U') ||
+                (e.ctrlKey && e.key === 'S')) {
+                e.preventDefault();
+                return false;
+            }
+        });
+
+        // Atrapalha debuggers
+        setInterval(function() {
+            debugger;
+        }, 5000);
+
+        // Sobrescreve console para dificultar logs
+        console.log = console.warn = console.error = function() {};
+    })();
+
     // =====================================================================
     // SISTEMA DE ESTATÍSTICAS E PLACAR (LOCAL STORAGE)
     // =====================================================================
