@@ -1,5 +1,5 @@
 // =====================================================================
-// SISTEMA DE ESTATÍSTICAS E PLACAR (LOCAL STORAGE)
+// SISTEMA DE ESTATÍSTICAS E PLACAR
 // =====================================================================
 const STATS = {
     data: {
@@ -432,281 +432,6 @@ BANCO_PERSONAGENS.TARGETS = {
              <rect x="20" y="120" width="18" height="8" fill="#fff"/><rect x="42" y="120" width="18" height="8" fill="#fff"/>`
         ), url_png: 'img/thomas.png' }
 };
-
-const BANCO_ITENS = {
-    WARDROBE: {
-        shirt: [
-            { icon: '⬛', text: 'Básica', axe: 15, c: '#222', s: true, o: false },
-            { icon: '🌺', text: 'Florida', axe: 25, c: '#9f1239', s: true, o: true, floral: true },
-            { icon: '🎽', text: 'Regata', axe: 10, c: '#f8fafc', s: false, o: false },
-            { icon: '🔥', text: 'Sem Camisa', axe: 5, c: 'none' },
-            { icon: '⚫', text: 'Preta Bolinhas', axe: 20, c: '#111', s: true, o: false, bolinhas: true },
-        ],
-        pants: [
-            { icon: '👖', text: 'Skinny', axe: 15, c: '#1e3a8a', h: 34 },
-            { icon: '🩳', text: 'Shorts Preto', axe: 8, c: '#111111', h: 14 },
-            { icon: '🧩', text: 'Xadrez', axe: 22, c: '#b8860b', h: 34, xadrez: true },
-            { icon: '🚫', text: 'Ir sem nada', axe: -5, c: 'none', h: 0 },
-        ],
-        shoes: [
-            { icon: '👟', text: 'All Star Vermelho', axe: 12, c: '#cc0000', h: 6, y: 122 },
-            { icon: '👟', text: 'New Balance', axe: 15, c: '#4b5563', h: 6, y: 122 },
-            { icon: '🥾', text: 'Coturno', axe: 18, c: '#111', h: 20, y: 108 },
-            { icon: '🚫', text: 'Ir sem nada', axe: -5, c: 'none', h: 0, y: 122 },
-        ],
-        perfume: [
-            { icon: '💎', text: 'PRADA (R$ 150)', cost: 150, bonus: 25 },
-            { icon: '🌿', text: 'Jequiti (R$ 50)', cost: 50, bonus: 10 },
-            { icon: '💨', text: 'Desodorante', cost: 0, bonus: 0 },
-        ],
-    }
-};
-
-const MOTOR = {
-    async iniciarJogo() {
-        try {
-            await Tone.start();
-            await AUDIO.init();
-            this.carregarCena('boot');
-        } catch(e) { console.error("Erro no Áudio:", e); }
-    },
-    carregarCena(nomeCena, params) {
-        if(CENAS[nomeCena]) {
-            if(CENAS[nomeCena].ativa !== false) CENAS[nomeCena].iniciar(params);
-            else this.typeText(TEXTOS.area_inativa, () => this.renderMenu([{text: "Voltar", action: () => this.carregarCena('apresentacao'), full: true}]));
-        } else console.error(`Cena não encontrada: ${nomeCena}`);
-    },
-    typeText(text, callback = null) {
-        if (ESTADO.typing) return;
-        ESTADO.typing = true; ESTADO.skipTyping = false;
-        
-        const el = document.getElementById('dialog-area');
-        const menuArea = document.getElementById('menu-area');
-        
-        if (text.length > 200) {
-            el.style.height = '65%';
-            menuArea.style.height = '35%';
-        } else {
-            el.style.height = '40%';
-            menuArea.style.height = '60%';
-        }
-
-        el.textContent = ''; 
-        el.classList.add('cursor');
-        menuArea.innerHTML = '';
-
-        const runner = async () => {
-            try {
-                for (let i = 0; i < text.length; i++) {
-                    if (ESTADO.skipTyping) { 
-                        el.textContent = text; 
-                        break; 
-                    }
-                    
-                    el.textContent += text.charAt(i);
-                    
-                    if (i % 3 === 0 && text.charAt(i) !== ' ') {
-                        try { AUDIO.playSfx('type'); } catch(e) {} 
-                    }
-                    
-                    el.scrollTop = el.scrollHeight;
-                    await new Promise((r) => setTimeout(r, CONFIG.velocidade_texto_ms));
-                }
-            } catch (erroCritico) {
-                console.error("Falha no renderizador de texto:", erroCritico);
-                el.textContent = text; 
-            } finally {
-                el.classList.remove('cursor');
-                ESTADO.typing = false;
-                
-                if (callback) {
-                    ESTADO.waitingNext = true;
-                    const arrow = document.createElement('span');
-                    arrow.className = 'blinking';
-                    arrow.style.color = '#ffea00';
-                    arrow.style.cursor = 'pointer';
-                    arrow.innerText = ' ▼';
-                    el.appendChild(arrow);
-                    
-                    ESTADO.resolveNext = () => {
-                        ESTADO.waitingNext = false;
-                        if(arrow.parentNode) arrow.remove();
-                        el.style.height = '40%';
-                        menuArea.style.height = '60%';
-                        callback();
-                    };
-                }
-            }
-        };
-        runner();
-    },
-    renderMenu(options) {
-        const menuEl = document.getElementById('menu-area'); menuEl.innerHTML = '';
-        options.forEach((opt, index) => {
-            const btn = document.createElement('button');
-            const isFull = opt.full || (options.length % 2 !== 0 && index === options.length - 1);
-            btn.className = `retro-btn ${isFull ? 'full-width' : ''}`;
-            
-            if (ESTADO.uiBlocked) btn.classList.add('disabled');
-            if (ESTADO.naRuaTransporteBloqueado && (opt.text.includes('Uber') || opt.text.includes('Metrô'))) {
-                btn.classList.add('disabled'); btn.style.opacity = '0.4'; btn.style.pointerEvents = 'none';
-            }
-            btn.innerHTML = `<span class="text-lg">${opt.icon || '▶'}</span> <span>${opt.text}</span>`;
-            btn.onclick = () => {
-                if (ESTADO.typing || ESTADO.uiBlocked) return;
-                if (ESTADO.naRuaTransporteBloqueado && (opt.text.includes('Uber') || opt.text.includes('Metrô'))) return;
-                AUDIO.playSfx('select'); opt.action();
-            };
-            menuEl.appendChild(btn);
-        });
-    },
-    renderFloorSelector() {
-        const menuEl = document.getElementById('menu-area');
-        menuEl.innerHTML = `
-            <div class="floor-selector">
-                <button class="floor-btn" onclick="CENAS.trackers._explorarAndar(1)">🚽 Banheiro (Obrigado por jogar!)</button>
-                <button class="floor-btn" onclick="CENAS.trackers._explorarAndar(3)">🚧 EM BREVE (Esta demo termina aqui)</button>
-                <button class="floor-btn" onclick="CENAS.trackers._explorarAndar(5)">🚧 EM BREVE (Estou exausto...)</button>
-                <button class="floor-btn" onclick="CENAS.trackers._explorarAndar(7)">🚧 EM BREVE (Mais de 1 mês desenvolvendo)</button>
-                <button class="floor-btn" onclick="CENAS.trackers._explorarAndar(10)">🚧 EM BREVE (Tudo feito com carinho)</button>
-                <button class="floor-btn" style="border-color:#ff1493;" onclick="CENAS.trackers._explorarAndar('telhado')">🔮 EM BREVE (Aguarde a versão final!)</button>
-                <button class="floor-btn back-btn" onclick="CENAS.trackers._menuTrackers()">🔙 Voltar para a Festa</button>
-            </div>
-        `;
-    },
-    updateHUD() {
-        document.getElementById('hud-money').innerText = ESTADO.money;
-        document.getElementById('hud-style').innerText = ESTADO.axe;
-        document.getElementById('hud-inv').innerText = ESTADO.inventory.join(', ') || 'Vazio';
-    },
-    atualizarFundo(cenaClass) { document.getElementById('visual-area').className = cenaClass; },
-    atualizarVisibilidadeProtagonista() {
-        const svg = document.getElementById('caio-sprite'); const img = document.getElementById('caio-img');
-        if (CONFIG.usar_png_protagonista_ON) {
-            svg.style.display = 'none'; img.style.display = 'block'; img.src = CONFIG.url_png_protagonista;
-        } else {
-            img.style.display = 'none'; svg.style.display = 'block';
-            const novoConteudo = BANCO_PERSONAGENS.construirCaioSVG(false);
-            svg.innerHTML = novoConteudo;
-        }
-        const hasPants = ESTADO.roupas.pants && ESTADO.roupas.pants.c !== 'none';
-        ESTADO.isNaked = !hasPants;
-    },
-    mostrarCarlosCapslock() {
-        const npc_svg = document.getElementById('npc-sprite'); npc_svg.style.display = 'block';
-        npc_svg.innerHTML = BANCO_PERSONAGENS.gerarCarlosCapslockSVG();
-        const npc_img = document.getElementById('npc-img'); npc_img.style.display = 'none';
-        npc_svg.classList.remove('jumping-right', 'jumping-left', 'wild-dancing', 'dancing', 'kiss-npc');
-    },
-    esconderNPC() { document.getElementById('npc-sprite').style.display = 'none'; document.getElementById('npc-img').style.display = 'none'; },
-    
-    async carlosPulaDireita() {
-        const npc = document.getElementById('npc-sprite'); npc.classList.add('jumping-right');
-        await new Promise(resolve => setTimeout(resolve, 1000)); this.esconderNPC();
-    },
-    
-    async npcFoge() {
-        const npc = document.getElementById('npc-sprite');
-        if (npc.style.display !== 'none') {
-            npc.classList.add('jumping-right');
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            this.esconderNPC();
-        }
-    },
-
-    async todosPulamEsquerda() {
-        const caio = document.getElementById('caio-sprite'); const npc = document.getElementById('npc-sprite');
-        if (caio.style.display !== 'none') caio.classList.add('jumping-left');
-        if (npc.style.display !== 'none') npc.classList.add('jumping-left');
-        await new Promise(resolve => setTimeout(resolve, 600));
-        caio.classList.remove('jumping-left'); npc.classList.remove('jumping-left');
-    },
-
-    async chamarUber(destino = 'trackers') {
-        if (ESTADO.chamandoUber || ESTADO.uiBlocked) return;
-        ESTADO.uiBlocked = true;
-        if (ESTADO.money < CONFIG.uber_cost) {
-            this.typeText('💰 Você não tem dinheiro suficiente para o Uber!', () => { 
-                ESTADO.uiBlocked = false; 
-                this.carregarCena('escolha_transporte'); 
-            });
-            return;
-        }
-        const hasPants = ESTADO.roupas.pants && ESTADO.roupas.pants.c !== 'none';
-        ESTADO.isNaked = !hasPants;
-        ESTADO.chamandoUber = true;
-
-        if (ESTADO.isNaked) {
-            this.typeText(TEXTOS.uber_nu_titulo, () => {
-                ESTADO.uiBlocked = false;
-                this.renderMenu([
-                    { icon: '🍬', text: 'TEM HALLS PRETO?', action: () => this._processarUberNu('halls') },
-                    { icon: '🔤', text: 'B', action: () => this._processarUberNu('b') },
-                    { icon: '🌙', text: 'MEIA NOITE EU TE CONTO', action: () => this._processarUberNu('meia') },
-                ]);
-            });
-            return;
-        }
-        await this._executarUber();
-    },
-    _processarUberNu(opcao) {
-        const aceita = Math.random() < 0.5;
-        if (aceita) {
-            this.typeText(TEXTOS.uber_aceitou, async () => { 
-                const mamadeira = document.createElement('div');
-                mamadeira.className = 'big-drink';
-                mamadeira.innerText = '🍼';
-                document.getElementById('visual-area').appendChild(mamadeira);
-                await new Promise(r => setTimeout(r, 1500));
-                mamadeira.remove();
-                await this._executarUber(); 
-            });
-        } else {
-            ESTADO.chamandoUber = false;
-            this.typeText(TEXTOS.uber_recusou, () => {
-                this.renderMenu([
-                    { icon: '🔄', text: 'Pedir novamente', action: () => this.chamarUber('trackers') },
-                    { icon: '🔙', text: 'Voltar', action: () => this.carregarCena('escolha_transporte') },
-                ]);
-            });
-        }
-    },
-    async _executarUber() {
-        ESTADO.money -= CONFIG.uber_cost; this.updateHUD();
-        ESTADO.uiBlocked = true; document.getElementById('menu-area').style.pointerEvents = 'none';
-        document.getElementById('menu-area').innerHTML = '';
-
-        document.getElementById('caio-sprite').style.display = 'none'; document.getElementById('caio-img').style.display = 'none';
-        AUDIO.playUber();
-        
-        const visual = document.getElementById('visual-area');
-        const smartContainer = document.createElement('div'); smartContainer.style.position = 'absolute'; smartContainer.style.bottom = '-50px'; smartContainer.style.zIndex = '70';
-        smartContainer.innerHTML = ASSETS.SMARTPHONE_SVG; visual.appendChild(smartContainer);
-        await new Promise((r) => setTimeout(r, 1500)); smartContainer.remove();
-
-        const container = document.createElement('div'); container.className = 'vehicle-container';
-        container.innerHTML = `<div style="position:relative; width:100%; height:80px; overflow:visible;"><div class="vehicle-svg" style="width:80%;">${ASSETS.UBER_SVG}</div></div>`;
-        visual.appendChild(container);
-        await new Promise((r) => setTimeout(r, 800)); container.remove();
-
-        const foiPrimeiraVez = !ESTADO.jaVisitouTrackers;
-        ESTADO.jaVisitouTrackers = true; ESTADO.chamandoUber = false; ESTADO.mostrarMensagemBoasVindas = true;
-        
-        await CENAS.trackers._animacaoChegada();
-        ESTADO.uiBlocked = false; document.getElementById('menu-area').style.pointerEvents = 'auto';
-        MOTOR.carregarCena('trackers', { primeiraVez: foiPrimeiraVez });
-    }
-};
-
-document.getElementById('game-device').addEventListener('pointerdown', (e) => { 
-    if (ESTADO.typing && CONFIG.avanco_rapido_texto_ON) {
-        ESTADO.skipTyping = true; 
-        e.preventDefault();
-    } else if (ESTADO.waitingNext) {
-        ESTADO.resolveNext();
-        e.preventDefault();
-    }
-});
 
 const CENAS = {
     'boot': {
@@ -1246,4 +971,272 @@ const CENAS = {
             const drinkDiv1 = document.createElement('div'); drinkDiv1.className = 'big-drink left-drink';
             drinkDiv1.innerText = caioType === 'cerveja' ? '🍺' : caioType === 'gin' ? '🍸' : '🥃';
 
-            const drinkDiv2 = document.
+            const drinkDiv2 = document.createElement('div'); drinkDiv2.className = 'big-drink right-drink';
+            drinkDiv2.innerText = choice === 'uma Cerveja' ? '🍺' : choice === 'um Gin' ? '🍸' : '🥃';
+
+            document.getElementById('visual-area').appendChild(drinkDiv1);
+            document.getElementById('visual-area').appendChild(drinkDiv2);
+            setTimeout(() => { drinkDiv1.remove(); drinkDiv2.remove(); }, 1500);
+
+            const caioSprite = document.getElementById('caio-sprite');
+            caioSprite.classList.add('drinking'); setTimeout(() => caioSprite.classList.remove('drinking'), 400);
+
+            const npcSprite = document.getElementById('npc-sprite');
+            npcSprite.classList.add('drinking'); setTimeout(() => npcSprite.classList.remove('drinking'), 400);
+
+            MOTOR.atualizarVisibilidadeProtagonista(); 
+
+            MOTOR.typeText(`Ele pediu ${choice} e vocês brindaram juntos. (+${axeBonus} AXÉ). O clima está propício...`, () => {
+                MOTOR.renderMenu([
+                    { icon: '💋', text: 'Chegar Junto (Flerte)', action: () => CENAS.trackers._resolverFlerte(ESTADO.currentCrush, true) },
+                    { icon: '🔙', text: 'Amarelar e Voltar', action: () => { 
+                        MOTOR.esconderNPC();
+                        ESTADO.mostrarMensagemBoasVindas = false; 
+                        const escapeTexts = {
+                            'loiro': "Você arregou pro Loiro e o deixou bebendo sozinho.",
+                            'moreno': "Deixou o Moreno no bar e sumiu na fumaça.",
+                            'volatille': "Fugiu do Volatille antes que as coisas ficassem loucas.",
+                            'ruivo': "Deixou o Ruivo esperando com o copo na mão.",
+                            'negro': "Você inventou uma desculpa e saiu de perto do Negro.",
+                            'thomas': "Thomas riu enquanto você dava meia volta."
+                        };
+                        MOTOR.typeText(escapeTexts[ESTADO.currentCrush] || "Você amarelou e foi embora.", () => MOTOR.carregarCena('trackers'));
+                    } },
+                ]);
+            });
+        }
+    },
+
+    'bar': {
+        ativa: true,
+        iniciar: () => {
+            if (ESTADO.uiBlocked) return;
+            MOTOR.atualizarFundo('bg-bar');
+            MOTOR.renderMenu([
+                { icon: '🍺', text: 'Cerveja (R$20)', action: () => CENAS.bar._beber('cerveja', 20, 3) },
+                { icon: '🍸', text: 'Gin (R$40)', action: () => { ESTADO.flirtBonus += 5; CENAS.bar._beber('gin', 40, 8); } },
+                { icon: '🥃', text: 'Catuaba (R$15)', action: () => CENAS.bar._beber('catuaba', 15, 5) },
+                { icon: '🔙', text: 'Voltar', action: () => { ESTADO.mostrarMensagemBoasVindas = false; MOTOR.carregarCena('trackers'); } },
+            ]);
+        },
+        _beber(type, cost, axeBonus) {
+            if (ESTADO.uiBlocked) return;
+            if (ESTADO.money < cost) { AUDIO.playSfx('error'); return; }
+            ESTADO.money -= cost; ESTADO.drinks++; ESTADO.axe += axeBonus; MOTOR.updateHUD();
+
+            const drinkDiv = document.createElement('div'); drinkDiv.className = 'big-drink';
+            drinkDiv.innerText = type === 'cerveja' ? '🍺' : type === 'gin' ? '🍸' : '🥃';
+            document.getElementById('visual-area').appendChild(drinkDiv); setTimeout(() => drinkDiv.remove(), 1500);
+
+            const limit = (ESTADO.inventory.includes('Veneno') || ESTADO.pillsTaken >= 1) ? 10 : 7;
+            
+            if (ESTADO.drinks >= limit) {
+                MOTOR.carregarCena('ambulancia');
+            } else {
+                MOTOR.typeText(`🍺 Bebeu ${type}! (+${axeBonus} AXÉ)`, () => MOTOR.carregarCena('bar'));
+            }
+
+            const targetSprite = document.getElementById('caio-sprite');
+            targetSprite.classList.add('drinking'); setTimeout(() => targetSprite.classList.remove('drinking'), 400);
+            MOTOR.atualizarVisibilidadeProtagonista(); 
+        }
+    },
+    'carlos_capslock': {
+        ativa: true,
+        iniciar: () => {
+            const targetSprite = document.getElementById('caio-sprite');
+            if (!ESTADO.carlosCapslockInteragiu) {
+                ESTADO.carlosCapslockInteragiu = true; AUDIO.playCarlosWild(); MOTOR.mostrarCarlosCapslock();
+                document.getElementById('npc-sprite').classList.add('wild-dancing'); targetSprite.classList.remove('dancing', 'wild-dancing');
+                MOTOR.typeText(TEXTOS.carlos_aparece, async () => {
+                    await MOTOR.carlosPulaDireita(); AUDIO.tocarMenu();
+                    MOTOR.typeText(TEXTOS.carlos_foge, () => { ESTADO.mostrarMensagemBoasVindas = false; MOTOR.carregarCena('trackers'); });
+                });
+            } else {
+                MOTOR.mostrarCarlosCapslock(); document.getElementById('npc-sprite').classList.add('dancing');
+                MOTOR.typeText(TEXTOS.carlos_retorna, () => {
+                    MOTOR.renderMenu([
+                        { icon: '💊', text: 'Aceitar os comprimidos', action: () => CENAS.carlos_capslock._carlosPillsAceitar() },
+                        { icon: '❌', text: 'Recusar os comprimidos', action: () => CENAS.carlos_capslock._carlosPillsRecusar() },
+                    ]);
+                });
+            }
+        },
+        _carlosPillsAceitar() {
+            const targetSprite = document.getElementById('caio-sprite');
+            MOTOR.mostrarCarlosCapslock();
+            const carlosSprite = document.getElementById('npc-sprite');
+
+            AUDIO.playCarlosWild(); carlosSprite.classList.add('wild-dancing'); targetSprite.classList.add('wild-dancing');
+            ESTADO.pillsTaken++; ESTADO.carlosCapslockPills = true; ESTADO.isHigh = true; MOTOR.atualizarVisibilidadeProtagonista();
+
+            if (ESTADO.pillsTaken >= 3) {
+                MOTOR.typeText(TEXTOS.carlos_aceitou, () => {
+                    ESTADO.axe += 20; ESTADO.flirtBonus += 15; MOTOR.updateHUD();
+                    MOTOR.carregarCena('fim_jogo', { msg: 'TETO PRETO', showFallen: true });
+                });
+                return;
+            }
+
+            MOTOR.typeText(TEXTOS.carlos_aceitou, () => {
+                ESTADO.axe += 20; ESTADO.flirtBonus += 15; MOTOR.updateHUD();
+                MOTOR.typeText(TEXTOS.carlos_onda, () => {
+                    carlosSprite.classList.remove('wild-dancing'); targetSprite.classList.remove('wild-dancing');
+                    MOTOR.esconderNPC(); MOTOR.atualizarVisibilidadeProtagonista(); AUDIO.tocarMenu();
+                    MOTOR.typeText('Você está diferente...', () => { ESTADO.mostrarMensagemBoasVindas = false; MOTOR.carregarCena('trackers'); });
+                });
+            });
+        },
+        _carlosPillsRecusar() {
+            const carlosSprite = document.getElementById('npc-sprite');
+            MOTOR.typeText(TEXTOS.carlos_recusou, async () => {
+                carlosSprite.classList.remove('dancing'); await MOTOR.carlosPulaDireita();
+                MOTOR.typeText(TEXTOS.carlos_recusou_fuga, () => {
+                    ESTADO.mostrarMensagemBoasVindas = false;
+                    MOTOR.renderMenu([{ icon: '🔙', text: 'Voltar', action: () => MOTOR.carregarCena('trackers'), full: true }]);
+                });
+            });
+        }
+    },
+    'ambulancia': {
+        ativa: true,
+        iniciar: () => {
+            STATS.addVolupia('ambulancia');
+            
+            AUDIO.stopAll(); MOTOR.atualizarFundo('bg-street'); document.getElementById('party-fx').style.display = 'none';
+            document.getElementById('caio-sprite').style.display = 'none'; document.getElementById('npc-sprite').style.display = 'none';
+
+            const scene = document.createElement('div'); scene.className = 'ambulance-scene';
+            scene.innerHTML = `<div class="ambulance-container"><div class="ambulance-svg">${ASSETS.AMBULANCIA_SVG}</div></div>`;
+            document.getElementById('visual-area').appendChild(scene);
+
+            ESTADO.uiBlocked = true;
+            MOTOR.typeText('Caramba, que tontura... O chão tá girando rápido demais! 🤢 DEU PT! Você bebeu todas e foi resgatado pela ambulância!', () => {
+                ESTADO.uiBlocked = false;
+                MOTOR.renderMenu([{ icon: '🔄', text: 'JOGAR NOVAMENTE', action: () => { location.reload(); }, full: true }]);
+            });
+        }
+    },
+    'preso_policia': {
+        ativa: true,
+        iniciar: () => {
+            STATS.addVolupia('preso');
+
+            AUDIO.stopAll(); MOTOR.atualizarFundo('bg-street'); document.getElementById('party-fx').style.display = 'none';
+            document.getElementById('caio-sprite').style.display = 'none'; document.getElementById('npc-sprite').style.display = 'none';
+
+            const scene = document.createElement('div'); scene.className = 'police-scene';
+            scene.innerHTML = `<div class="police-car-wrapper"><div class="police-car-svg">${ASSETS.POLICIA_SVG}</div></div>`;
+            document.getElementById('visual-area').appendChild(scene);
+
+            ESTADO.uiBlocked = true;
+            MOTOR.typeText(TEXTOS.preso_nu, () => {
+                ESTADO.uiBlocked = false;
+                MOTOR.renderMenu([{ icon: '🔄', text: 'JOGAR NOVAMENTE', action: () => { location.reload(); }, full: true }]);
+            });
+        }
+    },
+    'after_party': {
+        ativa: true,
+        iniciar: () => {
+            STATS.addEnding('thomas');
+
+            ESTADO.uiBlocked = false; 
+            AUDIO.playAfterMusic();
+            MOTOR.atualizarFundo('bg-after'); document.getElementById('party-fx').style.display = 'block';
+            document.getElementById('caio-sprite').style.display = 'none'; document.getElementById('npc-sprite').style.display = 'none';
+
+            const scene = document.createElement('div'); scene.className = 'after-scene';
+            scene.innerHTML += `<div class="after-text">🎉 AFTER PARTY COM THOMAS E A GALERA! 🎉</div>`;
+
+            let html = '<div class="after-room">';
+            const drinks = ['🍺', '🍸', '🥃', '🍷', '🍾', '🧊'];
+            for(let i=0; i<6; i++) {
+                html += `<div style="position:absolute; font-size:20px; left:${Math.random()*80 + 10}%; bottom:${Math.random()*30 + 10}%; z-index: 1;">${drinks[i]}</div>`;
+            }
+
+            const alvos = ['caio', ...CONFIG_FESTA.alvos_na_pista].sort(() => Math.random() - 0.5);
+            for (const id of alvos) {
+                const left = Math.random() * 70 + 10;
+                const bottom = Math.random() * 40 + 20;
+                const zIndex = Math.floor(100 - bottom);
+
+                if (id === 'caio') {
+                    html += `<div class="after-sprite" style="position:absolute; left:${left}%; bottom:${bottom}%; z-index:${zIndex};">${BANCO_PERSONAGENS.construirCaioSVG(false)}</div>`;
+                } else {
+                    const npc = BANCO_PERSONAGENS.TARGETS[id];
+                    if (npc) {
+                        html += `<div class="after-sprite" style="position:absolute; left:${left}%; bottom:${bottom}%; z-index:${zIndex};">
+                            <svg viewBox="0 0 80 128" style="overflow:visible;">${npc.svg_codigo || npc.svg}</svg>
+                            ${Math.random() < 0.4 ? `<div class="cigarro">🚬</div>` : ''}
+                        </div>`;
+                    }
+                }
+            }
+            html += '</div>';
+            scene.innerHTML += html; document.getElementById('visual-area').appendChild(scene);
+
+            MOTOR.typeText('A festa continua! Todos dançam ao som de house animado!', () => {
+                MOTOR.renderMenu([{ icon: '🔄', text: 'JOGAR NOVAMENTE', action: () => { location.reload(); }, full: true }]);
+            });
+        }
+    },
+
+    'final_dark_room': {
+        ativa: true,
+        iniciar: (targetId) => {
+            STATS.addVolupia('darkroom');
+            STATS.addEnding(targetId);
+
+            AUDIO.playUber(); 
+            MOTOR.atualizarFundo('bg-void'); 
+            document.getElementById('party-fx').style.display = 'none';
+            document.getElementById('caio-sprite').style.display = 'none'; 
+            document.getElementById('npc-sprite').style.display = 'none';
+
+            const scene = document.createElement('div');
+            scene.style.position = 'absolute'; scene.style.inset = '0';
+            scene.style.display = 'flex'; scene.style.justifyContent = 'center'; scene.style.alignItems = 'center';
+            
+            const target = BANCO_PERSONAGENS.TARGETS[targetId] || BANCO_PERSONAGENS.TARGETS['ruivo'];
+
+            scene.innerHTML = `
+                <div class="dark-room-bump-left" style="filter: brightness(0) drop-shadow(0 0 10px rgba(255,0,0,0.5)); z-index:2; width: 150px;">
+                    ${BANCO_PERSONAGENS.construirCaioSVG(false)}
+                </div>
+                <div class="dark-room-bump-right" style="filter: brightness(0) drop-shadow(0 0 10px rgba(255,0,0,0.5)); z-index:1; animation-delay: 0.2s; width: 150px;">
+                    <svg viewBox="0 0 80 128" style="width:100%;height:auto;overflow:visible;">${target.svg_codigo || target.svg}</svg>
+                </div>
+            `;
+            document.getElementById('visual-area').appendChild(scene);
+
+            ESTADO.uiBlocked = false;
+            MOTOR.typeText(`Vocês foram para a escuridão de um andar abandonado... O clima esquenta e os beijos se misturam ao som abafado do techno.\n\nFINAL SECRETO: DARK ROOM!`, () => {
+                MOTOR.renderMenu([{ icon: '🔄', text: 'JOGAR NOVAMENTE', action: () => { location.reload(); }, full: true }]);
+            });
+        }
+    },
+
+    'final_trisal': {
+        ativa: true,
+        iniciar: (alvos) => {
+            STATS.addVolupia('trisal');
+            STATS.addEnding(alvos.id1, alvos.id2);
+
+            const ts = document.getElementById('trisal-stage');
+            if (ts) ts.remove();
+
+            AUDIO.playBGM('happy'); ESTADO.isHigh = false;
+            const t1 = BANCO_PERSONAGENS.TARGETS[alvos.id1] || BANCO_PERSONAGENS.TARGETS['ruivo'];
+            const t2 = BANCO_PERSONAGENS.TARGETS[alvos.id2] || BANCO_PERSONAGENS.TARGETS['loiro'];
+            
+            MOTOR.atualizarFundo('bg-bedroom'); document.getElementById('party-fx').style.display = 'none';
+            document.getElementById('caio-sprite').style.display = 'none'; document.getElementById('npc-sprite').style.display = 'none';
+
+            const pClothes = {
+                shirt: ESTADO.roupas.shirt ? (ESTADO.roupas.shirt.floral ? 'url(#global-floral)' : (ESTADO.roupas.shirt.bolinhas ? 'url(#global-polka)' : ESTADO.roupas.shirt.c)) : 'none',
+                pants: ESTADO.roupas.pants ? (ESTADO.roupas.pants.xadrez ? 'url(#global-plaid)' : ESTADO.roupas.pants.c) : 'none',
+                shoes: ESTADO.roupas.shoes ? ESTADO.roupas.shoes.c : 'none'
+            };
+            const m1Clothes = t1.npcClothes || { shirt: 'none', pants: 'none', shoes: 'none' };
+            const m2Clothes = t2.npcClothes || { shirt: 'none', pants: '
