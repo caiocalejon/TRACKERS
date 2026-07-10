@@ -420,10 +420,12 @@
             <text x="100" y="335" font-size="8" fill="#ff0055" text-anchor="middle" font-family="'Press Start 2P', cursive">TRACKERS</text>
         </svg>
         <button onclick="MOTOR.carregarCena('apresentacao')" class="start-btn blinking">[ START ]</button>
+        <!-- NOVO BOTAO DO PLACAR AQUI -->
         <button onclick="toggleScoreboard()" class="retro-btn mt-4" style="width: auto; padding: 10px 20px; font-size: 10px;">[ PLACAR ]</button>
         <div id="creditos-splash">CALEJON 2026</div>
     </div>
 
+    <!-- HUD MODIFICADA COM O BOTÃO DE BATE-PAPO -->
     <div id="hud" style="display: none;">
         <div id="hud-chat-btn" class="text-red-500 blinking" style="cursor:pointer; z-index:110;" onclick="toggleChat(event)">💬BATE-PAPO</div>
         <div class="text-yellow-400">💰 R$<span id="hud-money">500</span></div>
@@ -446,6 +448,7 @@
         <div id="menu-area"></div>
     </div>
 
+    <!-- OVERLAY DO CHAT MODAL -->
     <div id="mamba-chat-overlay" onpointerdown="event.stopPropagation()" onclick="event.stopPropagation()" style="display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.7); z-index: 150; justify-content: center; align-items: center;">
         <div class="chat-container">
             <button onclick="toggleChat(event)" style="position: absolute; top: 5px; right: 5px; background: red; color: white; border: none; font-family: 'Press Start 2P', cursive; font-size: 8px; cursor: pointer; padding: 5px;">[X]</button>
@@ -469,15 +472,23 @@
         </div>
     </div>
 
+    <!-- OVERLAY DO PLACAR MODAL -->
     <div id="scoreboard-overlay" onpointerdown="event.stopPropagation()" onclick="event.stopPropagation()" style="display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.9); z-index: 160; flex-direction: column; justify-content: center; align-items: center; font-size: 10px;">
         <div style="background: #111; border: 4px solid var(--tracker-orange); padding: 20px; width: 90%; max-width: 400px; max-height: 80%; overflow-y: auto;">
             <h2 style="color: #ffaa00; text-align: center; margin-bottom: 20px; font-size: 14px; line-height: 1.5;">ESTATÍSTICAS<br>DE JOGO</h2>
             
             <div style="margin-bottom: 15px; color: #fff;">🕹️ JOGADAS (VISITAS): <span id="sb-plays" style="color: #0f8;">0</span></div>
-            <div style="margin-bottom: 25px; color: #fff;">🏆 FINAIS ATINGIDOS: <span id="sb-endings" style="color: #0f8;">0</span></div>
             
-            <div style="color: #ff3366; margin-bottom: 15px; border-bottom: 1px solid #444; padding-bottom: 5px; font-size: 9px;">💋 CRUSHES CONQUISTADOS:</div>
-            
+            <div style="color: #ff3366; margin-bottom: 10px; border-bottom: 1px solid #444; padding-bottom: 5px; font-size: 9px;">🔥 FINAIS DE VOLÚPIA:</div>
+            <div style="display: grid; grid-template-columns: 1fr; gap: 8px; color: #ccc; font-size: 8px; margin-bottom: 15px;">
+                <div>🚑 Ambulância (PT): <span id="sb-ambulancia" style="color:#fff;">0</span></div>
+                <div>🚨 Preso (Nudismo): <span id="sb-preso" style="color:#fff;">0</span></div>
+                <div>😵 Teto Preto: <span id="sb-tetopreto" style="color:#fff;">0</span></div>
+                <div>🌑 Dark Room: <span id="sb-darkroom" style="color:#fff;">0</span></div>
+                <div>💞 Trisal: <span id="sb-trisal" style="color:#fff;">0</span></div>
+            </div>
+
+            <div style="color: #ff3366; margin-bottom: 10px; border-bottom: 1px solid #444; padding-bottom: 5px; font-size: 9px;">💋 CRUSHS CONQUISTADOS:</div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; color: #ccc; font-size: 8px; line-height: 1.6;">
                 <div>👱‍♂️ Loiro: <span id="sb-loiro" style="color:#fff;">0</span></div>
                 <div>🧔🏽 Moreno: <span id="sb-moreno" style="color:#fff;">0</span></div>
@@ -499,26 +510,33 @@
     const STATS = {
         data: {
             plays: 0,
-            endings: 0,
+            volupia: { ambulancia: 0, preso: 0, tetopreto: 0, darkroom: 0, trisal: 0 },
             targets: { loiro: 0, moreno: 0, volatille: 0, ruivo: 0, negro: 0, thomas: 0 }
         },
         init() {
-            const saved = localStorage.getItem('trackers_stats_v1');
+            const saved = localStorage.getItem('trackers_stats_v2');
             if (saved) {
                 try {
-                    this.data = JSON.parse(saved);
+                    const parsed = JSON.parse(saved);
+                    this.data = { ...this.data, ...parsed };
+                    if(!this.data.volupia) this.data.volupia = { ambulancia: 0, preso: 0, tetopreto: 0, darkroom: 0, trisal: 0 };
                 } catch(e) { console.error("Erro ao ler estatísticas."); }
             }
         },
         save() {
-            localStorage.setItem('trackers_stats_v1', JSON.stringify(this.data));
+            localStorage.setItem('trackers_stats_v2', JSON.stringify(this.data));
         },
         addPlay() {
             this.data.plays++;
             this.save();
         },
+        addVolupia(type) {
+            if(this.data.volupia[type] !== undefined) {
+                this.data.volupia[type]++;
+                this.save();
+            }
+        },
         addEnding(targetId1, targetId2 = null) {
-            this.data.endings++;
             if(targetId1 && this.data.targets[targetId1] !== undefined) this.data.targets[targetId1]++;
             if(targetId2 && this.data.targets[targetId2] !== undefined) this.data.targets[targetId2]++;
             this.save();
@@ -530,7 +548,13 @@
         if(overlay.style.display === 'none') {
             STATS.init();
             document.getElementById('sb-plays').innerText = STATS.data.plays;
-            document.getElementById('sb-endings').innerText = STATS.data.endings;
+            
+            document.getElementById('sb-ambulancia').innerText = STATS.data.volupia.ambulancia;
+            document.getElementById('sb-preso').innerText = STATS.data.volupia.preso;
+            document.getElementById('sb-tetopreto').innerText = STATS.data.volupia.tetopreto;
+            document.getElementById('sb-darkroom').innerText = STATS.data.volupia.darkroom;
+            document.getElementById('sb-trisal').innerText = STATS.data.volupia.trisal;
+
             for(let key in STATS.data.targets) {
                 const el = document.getElementById(`sb-${key}`);
                 if(el) el.innerText = STATS.data.targets[key];
@@ -1202,9 +1226,7 @@
         'apresentacao': {
             ativa: true,
             iniciar: () => {
-                // REGISTRA A JOGADA / VISITA NO PLACAR
                 STATS.addPlay();
-
                 document.getElementById('splash-screen').style.display = 'none';
                 document.getElementById('hud').style.display = 'flex';
                 document.getElementById('visual-area').style.display = 'flex';
@@ -1860,6 +1882,8 @@
         'ambulancia': {
             ativa: true,
             iniciar: () => {
+                STATS.addVolupia('ambulancia');
+                
                 AUDIO.stopAll(); MOTOR.atualizarFundo('bg-street'); document.getElementById('party-fx').style.display = 'none';
                 document.getElementById('caio-sprite').style.display = 'none'; document.getElementById('npc-sprite').style.display = 'none';
 
@@ -1877,6 +1901,8 @@
         'preso_policia': {
             ativa: true,
             iniciar: () => {
+                STATS.addVolupia('preso');
+
                 AUDIO.stopAll(); MOTOR.atualizarFundo('bg-street'); document.getElementById('party-fx').style.display = 'none';
                 document.getElementById('caio-sprite').style.display = 'none'; document.getElementById('npc-sprite').style.display = 'none';
 
@@ -1894,7 +1920,6 @@
         'after_party': {
             ativa: true,
             iniciar: () => {
-                // REGISTRA O FINAL COM O THOMAS
                 STATS.addEnding('thomas');
 
                 ESTADO.uiBlocked = false; 
@@ -1941,7 +1966,7 @@
         'final_dark_room': {
             ativa: true,
             iniciar: (targetId) => {
-                // REGISTRA O FINAL DARK ROOM
+                STATS.addVolupia('darkroom');
                 STATS.addEnding(targetId);
 
                 AUDIO.playUber(); 
@@ -1976,7 +2001,7 @@
         'final_trisal': {
             ativa: true,
             iniciar: (alvos) => {
-                // REGISTRA O FINAL PARA AMBOS
+                STATS.addVolupia('trisal');
                 STATS.addEnding(alvos.id1, alvos.id2);
 
                 const ts = document.getElementById('trisal-stage');
@@ -2042,7 +2067,6 @@
         'final_cama': {
             ativa: true,
             iniciar: (targetId) => {
-                // REGISTRA O FINAL DA CAMA NORMAL
                 STATS.addEnding(targetId);
 
                 AUDIO.playBGM('happy'); ESTADO.isHigh = false;
@@ -2102,6 +2126,8 @@
                 const msg = (params && params.msg) ? params.msg : 'FIM DE JOGO';
 
                 if (showFallen && msg === 'TETO PRETO') {
+                    STATS.addVolupia('tetopreto');
+                    
                     document.getElementById('caio-sprite').style.display = 'none'; document.getElementById('npc-sprite').style.display = 'none';
                     const blackoutDiv = document.createElement('div'); blackoutDiv.className = 'blackout-scene';
                     blackoutDiv.innerHTML = `<div class="blackout-text">TETO PRETO</div><div class="blackout-boneco">${BANCO_PERSONAGENS.construirCaioSVG(true)}</div>`;
