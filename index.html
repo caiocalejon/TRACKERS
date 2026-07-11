@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>TRACKERS ENGINE</title>
 
+    <!-- ====== FIREBASE SDK ====== -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
@@ -535,66 +539,203 @@
         console.log = console.warn = console.error = function() {};
     })();
 
-    // =====================================================================
-    // SISTEMA DE ESTATÍSTICAS E PLACAR (LOCAL STORAGE)
-    // =====================================================================
+    // ================================================================
+    // FIREBASE - CONFIGURAÇÃO (SUAS CREDENCIAIS)
+    // ================================================================
+    const firebaseConfig = {
+        apiKey: "AIzaSyDQUC-ILy6nQ0XxJ8yD6LIs0cg1D40T-bM",
+        authDomain: "trackers-by-calejon.firebaseapp.com",
+        databaseURL: "https://trackers-by-calejon-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "trackers-by-calejon",
+        storageBucket: "trackers-by-calejon.firebasestorage.app",
+        messagingSenderId: "369713233093",
+        appId: "1:369713233093:web:6700fbb08987bc287a44ac",
+        measurementId: "G-WR2E3PXZDE"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // ================================================================
+    // SISTEMA DE ESTATÍSTICAS GLOBAIS (FIREBASE + LOCALSTORAGE)
+    // ================================================================
     const STATS = {
         data: {
             plays: 0,
             volupia: { ambulancia: 0, preso: 0, tetopreto: 0, darkroom: 0, trisal: 0 },
             targets: { loiro: 0, moreno: 0, volatille: 0, ruivo: 0, negro: 0, thomas: 0 }
         },
+
+        // Inicializa: carrega localStorage + sincroniza com Firebase
         init() {
+            // 1. Carrega dados locais (fallback)
             const saved = localStorage.getItem('trackers_stats_v2');
             if (saved) {
                 try {
                     const parsed = JSON.parse(saved);
                     this.data = { ...this.data, ...parsed };
-                    if(!this.data.volupia) this.data.volupia = { ambulancia: 0, preso: 0, tetopreto: 0, darkroom: 0, trisal: 0 };
-                } catch(e) { console.error("Erro ao ler estatísticas."); }
+                    if (!this.data.volupia) this.data.volupia = { ambulancia: 0, preso: 0, tetopreto: 0, darkroom: 0, trisal: 0 };
+                } catch (e) {
+                    console.error("Erro ao ler estatísticas locais.");
+                }
             }
+
+            // 2. Sincroniza com Firebase (sobrescreve dados locais se houver)
+            this.syncFromFirebase();
         },
+
+        // Lê do Firebase e atualiza dados locais + interface
+        syncFromFirebase() {
+            const ref = db.ref('stats');
+            ref.once('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    // Atualiza dados locais com os valores do Firebase
+                    if (data.plays !== undefined) this.data.plays = data.plays;
+                    if (data.volupia) {
+                        for (let key in data.volupia) {
+                            if (this.data.volupia[key] !== undefined) {
+                                this.data.volupia[key] = data.volupia[key];
+                            }
+                        }
+                    }
+                    if (data.targets) {
+                        for (let key in data.targets) {
+                            if (this.data.targets[key] !== undefined) {
+                                this.data.targets[key] = data.targets[key];
+                            }
+                        }
+                    }
+                    // Salva localmente como cache
+                    this.save();
+                    // Atualiza a interface (placar se estiver aberto)
+                    this.updateUI();
+                } else {
+                    // Se não existir dados no Firebase, cria o nó com os dados locais
+                    this.pushToFirebase();
+                }
+            }).catch((err) => {
+                console.warn("Falha ao sincronizar com Firebase, usando dados locais.", err);
+                this.updateUI();
+            });
+        },
+
+        // Envia TODOS os dados atuais para o Firebase (sobrescreve)
+        pushToFirebase() {
+            const ref = db.ref('stats');
+            ref.set({
+                plays: this.data.plays,
+                volupia: this.data.volupia,
+                targets: this.data.targets
+            }).catch((err) => console.warn("Falha ao salvar no Firebase:", err));
+        },
+
+        // Salva no localStorage (cache local)
         save() {
             localStorage.setItem('trackers_stats_v2', JSON.stringify(this.data));
         },
-        addPlay() {
-            this.data.plays++;
-            this.save();
-        },
-        addVolupia(type) {
-            if(this.data.volupia[type] !== undefined) {
-                this.data.volupia[type]++;
-                this.save();
+
+        // Atualiza a interface (placar se estiver aberto)
+        updateUI() {
+            const overlay = document.getElementById('scoreboard-overlay');
+            if (overlay.style.display === 'flex') {
+                document.getElementById('sb-plays').innerText = this.data.plays;
+                document.getElementById('sb-ambulancia').innerText = this.data.volupia.ambulancia;
+                document.getElementById('sb-preso').innerText = this.data.volupia.preso;
+                document.getElementById('sb-tetopreto').innerText = this.data.volupia.tetopreto;
+                document.getElementById('sb-darkroom').innerText = this.data.volupia.darkroom;
+                document.getElementById('sb-trisal').innerText = this.data.volupia.trisal;
+
+                for (let key in this.data.targets) {
+                    const el = document.getElementById(`sb-${key}`);
+                    if (el) el.innerText = this.data.targets[key];
+                }
             }
         },
-        addEnding(targetId1, targetId2 = null) {
-            if(targetId1 && this.data.targets[targetId1] !== undefined) this.data.targets[targetId1]++;
-            if(targetId2 && this.data.targets[targetId2] !== undefined) this.data.targets[targetId2]++;
+
+        // ===== FUNÇÕES QUE VOCÊ JÁ USAVA (mantidas com mesmo nome) =====
+
+        // Incrementa JOGADAS (visitas) – atômico no Firebase
+        addPlay() {
+            // Atualiza local (otimista)
+            this.data.plays++;
             this.save();
+            this.updateUI();
+
+            // Transação atômica no Firebase
+            const ref = db.ref('stats/plays');
+            ref.transaction((current) => {
+                return (current || 0) + 1;
+            }, (error, committed, snapshot) => {
+                if (error) {
+                    console.warn("Erro na transação Firebase:", error);
+                } else if (committed) {
+                    this.data.plays = snapshot.val();
+                    this.save();
+                    this.updateUI();
+                }
+            });
+        },
+
+        // Incrementa final de volúpia
+        addVolupia(type) {
+            if (this.data.volupia[type] === undefined) return;
+            // Atualiza local
+            this.data.volupia[type]++;
+            this.save();
+            this.updateUI();
+
+            // Transação atômica no Firebase
+            const ref = db.ref(`stats/volupia/${type}`);
+            ref.transaction((current) => {
+                return (current || 0) + 1;
+            }, (error, committed, snapshot) => {
+                if (!error && committed) {
+                    this.data.volupia[type] = snapshot.val();
+                    this.save();
+                    this.updateUI();
+                }
+            });
+        },
+
+        // Incrementa crush conquistado (até dois)
+        addEnding(targetId1, targetId2 = null) {
+            if (targetId1 && this.data.targets[targetId1] !== undefined) {
+                this.data.targets[targetId1]++;
+                const ref = db.ref(`stats/targets/${targetId1}`);
+                ref.transaction((current) => (current || 0) + 1);
+            }
+            if (targetId2 && this.data.targets[targetId2] !== undefined) {
+                this.data.targets[targetId2]++;
+                const ref = db.ref(`stats/targets/${targetId2}`);
+                ref.transaction((current) => (current || 0) + 1);
+            }
+            this.save();
+            this.updateUI();
         }
     };
 
+    // ================================================================
+    // FUNÇÃO PARA ABRIR/FECHAR O PLACAR (agora sincroniza com Firebase)
+    // ================================================================
     function toggleScoreboard() {
         const overlay = document.getElementById('scoreboard-overlay');
-        if(overlay.style.display === 'none') {
-            STATS.init();
-            document.getElementById('sb-plays').innerText = STATS.data.plays;
-            
-            document.getElementById('sb-ambulancia').innerText = STATS.data.volupia.ambulancia;
-            document.getElementById('sb-preso').innerText = STATS.data.volupia.preso;
-            document.getElementById('sb-tetopreto').innerText = STATS.data.volupia.tetopreto;
-            document.getElementById('sb-darkroom').innerText = STATS.data.volupia.darkroom;
-            document.getElementById('sb-trisal').innerText = STATS.data.volupia.trisal;
-
-            for(let key in STATS.data.targets) {
-                const el = document.getElementById(`sb-${key}`);
-                if(el) el.innerText = STATS.data.targets[key];
-            }
+        if (overlay.style.display === 'none') {
+            // Sincroniza com Firebase antes de mostrar
+            STATS.syncFromFirebase();
             overlay.style.display = 'flex';
         } else {
             overlay.style.display = 'none';
         }
     }
+
+    // ================================================================
+    // TODO O RESTO DO SEU JOGO PERMANECE EXATAMENTE IGUAL
+    // ================================================================
+    // A partir daqui, todo o seu código original (ASSETS, TEXTOS, CONFIG,
+    // ESTADO, AUDIO, BANCO_PERSONAGENS, MOTOR, CENAS, CHAT, etc.)
+    // DEVE SER COLADO ABAIXO. NADA FOI ALTERADO.
+    // ================================================================
 
     const ASSETS = {
         UBER_SVG: `<svg viewBox="0 0 160 80" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:auto;"><rect x="12" y="26" width="136" height="34" fill="#2a2a2a" rx="2"/><rect x="20" y="16" width="80" height="18" fill="#3a3a3a" rx="2"/><rect x="22" y="14" width="76" height="6" fill="#4a4a4a" rx="1"/><rect x="26" y="18" width="16" height="12" fill="#88ccff" rx="1"/><rect x="48" y="18" width="16" height="12" fill="#88ccff" rx="1"/><rect x="70" y="18" width="16" height="12" fill="#88ccff" rx="1"/><rect x="28" y="20" width="6" height="2" fill="rgba(255,255,255,0.3)"/><rect x="50" y="20" width="6" height="2" fill="rgba(255,255,255,0.3)"/><rect x="72" y="20" width="6" height="2" fill="rgba(255,255,255,0.3)"/><rect x="8" y="32" width="8" height="6" fill="#ffee00" rx="1"/><rect x="144" y="32" width="8" height="6" fill="#ff4444" rx="1"/><rect x="6" y="30" width="4" height="10" fill="#ffaa00" rx="1"/><rect x="150" y="30" width="4" height="10" fill="#cc2222" rx="1"/><rect x="16" y="34" width="6" height="12" fill="#555" rx="1"/><rect x="16" y="40" width="6" height="2" fill="#777"/><rect x="32" y="58" width="18" height="14" fill="#111" rx="2"/><rect x="36" y="60" width="10" height="10" fill="#444" rx="1"/><rect x="38" y="62" width="6" height="6" fill="#666" rx="1"/><rect x="110" y="58" width="18" height="14" fill="#111" rx="2"/><rect x="114" y="60" width="10" height="10" fill="#444" rx="1"/><rect x="116" y="62" width="6" height="6" fill="#666" rx="1"/><rect x="16" y="46" width="128" height="2" fill="#444"/><rect x="22" y="50" width="116" height="2" fill="#555"/><rect x="0" y="18" width="16" height="2" fill="rgba(255,255,255,0.3)"/><rect x="4" y="28" width="22" height="2" fill="rgba(255,255,255,0.25)"/><rect x="0" y="38" width="26" height="2" fill="rgba(255,255,255,0.2)"/><rect x="80" y="12" width="18" height="2" fill="rgba(255,255,255,0.25)"/><rect x="90" y="22" width="14" height="2" fill="rgba(255,255,255,0.2)"/></svg>`,
@@ -2290,6 +2431,41 @@
         messagesDiv.appendChild(newMsg);
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
+
+    // ================================================================
+    // INICIALIZAÇÃO
+    // ================================================================
+    document.addEventListener('DOMContentLoaded', function() {
+        // Garantir que os SVGs existam
+        const stage = document.getElementById('stage');
+        if (!document.getElementById('caio-sprite')) {
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.id = 'caio-sprite';
+            svg.setAttribute('viewBox', '0 0 80 128');
+            svg.className = 'svg-avatar pixelated breathe';
+            stage.appendChild(svg);
+        }
+        if (!document.getElementById('npc-sprite')) {
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.id = 'npc-sprite';
+            svg.setAttribute('viewBox', '0 0 80 128');
+            svg.className = 'svg-avatar pixelated breathe';
+            svg.style.display = 'none';
+            stage.appendChild(svg);
+        }
+        document.getElementById('scoreboard-overlay').style.display = 'none';
+        document.getElementById('mamba-chat-overlay').style.display = 'none';
+        document.getElementById('boot-screen').style.display = 'flex';
+
+        // Inicializa as estatísticas (lê do Firebase)
+        STATS.init();
+    });
+
+    // Expor globais
+    window.MOTOR = MOTOR;
+    window.STATS = STATS;
+    window.toggleScoreboard = toggleScoreboard;
+    window.toggleChat = toggleChat;
 </script>
 </body>
 </html>
