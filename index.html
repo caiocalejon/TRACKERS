@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>TRACKERS ENGINE</title>
 
-    <!-- ====== FIREBASE SDK ====== -->
+ 
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 
@@ -14,9 +14,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 
     <style>
-        /* =====================================================================
-           [1] ESTÉTICA E VARIÁVEIS GLOBAIS
-           ===================================================================== */
+     
         :root {
             --skin-base: #a67c52;
             --skin-shade: #855f38;
@@ -53,7 +51,7 @@
         }
         .pixelated { image-rendering: pixelated; }
 
-        /* Estrutura de Interface */
+   
         #hud {
             height: 6%; background: linear-gradient(to bottom, var(--ui-bg-top), var(--ui-bg-bottom));
             border-bottom: 4px solid var(--ui-border); display: flex; justify-content: space-between;
@@ -75,7 +73,7 @@
             grid-template-columns: 1fr 1fr; grid-auto-rows: min-content; gap: 6px; transition: height 0.3s ease;
         }
 
-        /* Cenários e Atmosfera */
+      
         .bg-void { background: #000; }
         .bg-room { background: linear-gradient(to bottom, #1f1c2c, #3a2a45); border-bottom: 24px solid #1a1a1a;}
         
@@ -126,7 +124,7 @@
         .party-lights { position: absolute; inset: 0; mix-blend-mode: color-dodge; animation: strobe 0.5s infinite alternate; pointer-events: none; z-index: 6; }
         @keyframes strobe { 0% { background: rgba(255, 0, 85, 0.25); } 100% { background: rgba(0, 255, 204, 0.25); } }
 
-        /* Botões UI */
+     
         .retro-btn {
             background: linear-gradient(to bottom, var(--ui-bg-top), var(--ui-bg-bottom));
             border: 2px solid var(--ui-border); color: #fff; padding: 10px; font-size: 9px;
@@ -159,17 +157,17 @@
         .floor-btn.back-btn { border-color: #00ff88; }
         .floor-btn.back-btn:hover { background: #00ff88; color: #000; }
 
-        /* Animações Visuais */
+   
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
         .blinking { animation: blink 1s infinite; }
         @keyframes breathe { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
         .breathe { animation: breathe 2s infinite ease-in-out; }
         
-        /* Animação padrão (NPCs) */
+      
         @keyframes dance { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-6px) rotate(2deg); } }
         .dancing { animation: dance 0.4s infinite; }
         
-        /* NOVA ANIMAÇÃO: Dança exclusiva do protagonista (Caio) */
+       
         @keyframes caioDancePro {
             0%, 100% { transform: translateY(0) scale(1) rotate(0deg); filter: drop-shadow(0 0 10px #ff0055); }
             25% { transform: translateY(-20px) scale(1.1) rotate(-15deg); filter: drop-shadow(0 0 20px #00d4ff); }
@@ -199,12 +197,12 @@
         @keyframes rhythmicBumpLeft { 0%, 100% { transform: translateX(35px) rotate(5deg); } 50% { transform: translateX(35px) translateY(-5px) rotate(5deg); } }
         @keyframes rhythmicBumpRight { 0%, 100% { transform: translateX(-35px) scaleX(-1) rotate(5deg); } 50% { transform: translateX(-35px) scaleX(-1) translateY(-5px) rotate(5deg); } }
 
-        /* Efeito de velocidade nos veículos */
+    
         .vehicle-container { position: absolute; top: 50%; left: -30%; transform: translateY(-50%); z-index: 50; width: 80%; pointer-events: none; }
         .vehicle-svg { animation: driveRight 0.8s linear forwards; }
         @keyframes driveRight { 0% { transform: translateX(0); } 100% { transform: translateX(160%); } }
 
-        /* Coração e Bebidas Duplas */
+ 
         .heart-multi { position: absolute; font-size: 24px; pointer-events: none; z-index: 60; animation: heartFloat 1.5s ease-out forwards; }
         @keyframes heartFloat { 0% { transform: translateY(0) scale(0.5); opacity: 1; } 100% { transform: translateY(-80px) scale(1.5); opacity: 0; } }
         .left-drink { left: 35% !important; transform: translateX(-50%); }
@@ -228,7 +226,7 @@
 
         #creditos-splash { color: #ffd700; font-size: 10px; margin-top: 12px; text-shadow: 2px 2px 0 #000; }
 
-        /* PREDIO GIGANTE FIX */
+    
         .arrival-scene { position: absolute; inset: 0; background: rgba(0,0,20,0.92); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 80; transition: opacity 1s; }
         .arrival-scene .predio-container { width: 100%; max-width: 400px; height: 60vh; display: flex; align-items: center; justify-content: center; animation: tiltUp 3s ease-in-out forwards; }
         .arrival-scene .predio-container svg { width: 100%; height: 100%; object-fit: contain; }
@@ -267,9 +265,7 @@
         @keyframes fumaça { 0% { opacity: 0.3; transform: translateY(0) scale(0.8); } 100% { opacity: 1; transform: translateY(-8px) scale(1.2); } }
         .after-text { color: #ffd700; font-size: 12px; text-shadow: 0 0 20px #ff8800; text-align: center; animation: blink 1s infinite; position: absolute; top: 20px; width: 100%; z-index: 60; }
         
-        /* =====================================================================
-           ESTILIZAÇÃO DO TERMINAL DE BATE-PAPO (INTEGRADO)
-           ===================================================================== */
+     
         #mamba-chat-overlay .chat-container {
             background: rgba(17, 17, 17, 0.95);
             border: 2px solid #990000;
@@ -424,12 +420,12 @@
             <text x="100" y="335" font-size="8" fill="#ff0055" text-anchor="middle" font-family="'Press Start 2P', cursive">TRACKERS</text>
         </svg>
         <button onclick="MOTOR.carregarCena('apresentacao')" class="start-btn blinking">[ START ]</button>
-        <!-- NOVO BOTAO DO PLACAR AQUI -->
+  
         <button onclick="toggleScoreboard()" class="retro-btn mt-4" style="width: auto; padding: 10px 20px; font-size: 10px;">[ PLACAR ]</button>
         <div id="creditos-splash">CALEJON 2026</div>
     </div>
 
-    <!-- HUD MODIFICADA COM O BOTÃO DE BATE-PAPO -->
+
     <div id="hud" style="display: none;">
         <div id="hud-chat-btn" class="text-red-500 blinking" style="cursor:pointer; z-index:110;" onclick="toggleChat(event)">💬BATE-PAPO</div>
         <div class="text-yellow-400">💰 R$<span id="hud-money">500</span></div>
@@ -452,7 +448,7 @@
         <div id="menu-area"></div>
     </div>
 
-    <!-- OVERLAY DO CHAT MODAL -->
+
     <div id="mamba-chat-overlay" onpointerdown="event.stopPropagation()" onclick="event.stopPropagation()" style="display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.7); z-index: 150; justify-content: center; align-items: center;">
         <div class="chat-container">
             <button onclick="toggleChat(event)" style="position: absolute; top: 5px; right: 5px; background: red; color: white; border: none; font-family: 'Press Start 2P', cursive; font-size: 8px; cursor: pointer; padding: 5px;">[X]</button>
@@ -476,7 +472,7 @@
         </div>
     </div>
 
-    <!-- OVERLAY DO PLACAR MODAL -->
+
     <div id="scoreboard-overlay" onpointerdown="event.stopPropagation()" onclick="event.stopPropagation()" style="display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.9); z-index: 160; flex-direction: column; justify-content: center; align-items: center; font-size: 10px;">
         <div style="background: #111; border: 4px solid var(--tracker-orange); padding: 20px; width: 90%; max-width: 400px; max-height: 80%; overflow-y: auto;">
             <h2 style="color: #ffaa00; text-align: center; margin-bottom: 20px; font-size: 14px; line-height: 1.5;">ESTATÍSTICAS<br>DE JOGO</h2>
@@ -496,7 +492,7 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; color: #ccc; font-size: 8px; line-height: 1.6;">
                 <div>👱‍♂️ Loiro: <span id="sb-loiro" style="color:#fff;">0</span></div>
                 <div>🧔🏽 Moreno: <span id="sb-moreno" style="color:#fff;">0</span></div>
-                <div>🦄 Volati: <span id="sb-volatille" style="color:#fff;">0</span></div>
+                <div>🦄 Volatille: <span id="sb-volatille" style="color:#fff;">0</span></div>
                 <div>🧑‍🦰 Ruivo: <span id="sb-ruivo" style="color:#fff;">0</span></div>
                 <div>👨🏿 Negro: <span id="sb-negro" style="color:#fff;">0</span></div>
                 <div>💀 Thomas: <span id="sb-thomas" style="color:#fff;">0</span></div>
@@ -508,17 +504,15 @@
 </div>
 
 <script>
-    // ================================================================
-    // PROTEÇÃO CONTRA CÓPIA E SALVAMENTO DO CÓDIGO FONTE
-    // ================================================================
+ 
     (function() {
-        // Bloqueia clique direito
+      
         document.addEventListener('contextmenu', function(e) {
             e.preventDefault();
             return false;
         });
 
-        // Bloqueia teclas de atalho para ferramentas de desenvolvedor e salvar
+        
         document.addEventListener('keydown', function(e) {
             // F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U, Ctrl+S
             if (e.key === 'F12' ||
@@ -530,18 +524,16 @@
             }
         });
 
-        // Atrapalha debuggers
+        
         setInterval(function() {
             debugger;
         }, 5000);
 
-        // Sobrescreve console para dificultar logs
+       
         console.log = console.warn = console.error = function() {};
     })();
 
-    // ================================================================
-    // FIREBASE - CONFIGURAÇÃO (SUAS CREDENCIAIS)
-    // ================================================================
+ 
     const firebaseConfig = {
         apiKey: "AIzaSyDQUC-ILy6nQ0XxJ8yD6LIs0cg1D40T-bM",
         authDomain: "trackers-by-calejon.firebaseapp.com",
@@ -556,9 +548,7 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // ================================================================
-    // SISTEMA DE ESTATÍSTICAS GLOBAIS (FIREBASE + LOCALSTORAGE)
-    // ================================================================
+
     const STATS = {
         data: {
             plays: 0,
@@ -566,9 +556,9 @@
             targets: { loiro: 0, moreno: 0, volatille: 0, ruivo: 0, negro: 0, thomas: 0 }
         },
 
-        // Inicializa: carrega localStorage + sincroniza com Firebase
+       
         init() {
-            // 1. Carrega dados locais (fallback)
+            
             const saved = localStorage.getItem('trackers_stats_v2');
             if (saved) {
                 try {
@@ -580,17 +570,17 @@
                 }
             }
 
-            // 2. Sincroniza com Firebase (sobrescreve dados locais se houver)
+           
             this.syncFromFirebase();
         },
 
-        // Lê do Firebase e atualiza dados locais + interface
+        
         syncFromFirebase() {
             const ref = db.ref('stats');
             ref.once('value', (snapshot) => {
                 const data = snapshot.val();
                 if (data) {
-                    // Atualiza dados locais com os valores do Firebase
+                    
                     if (data.plays !== undefined) this.data.plays = data.plays;
                     if (data.volupia) {
                         for (let key in data.volupia) {
@@ -606,12 +596,12 @@
                             }
                         }
                     }
-                    // Salva localmente como cache
+                  
                     this.save();
-                    // Atualiza a interface (placar se estiver aberto)
+                  
                     this.updateUI();
                 } else {
-                    // Se não existir dados no Firebase, cria o nó com os dados locais
+                    
                     this.pushToFirebase();
                 }
             }).catch((err) => {
@@ -620,7 +610,7 @@
             });
         },
 
-        // Envia TODOS os dados atuais para o Firebase (sobrescreve)
+        
         pushToFirebase() {
             const ref = db.ref('stats');
             ref.set({
@@ -630,12 +620,12 @@
             }).catch((err) => console.warn("Falha ao salvar no Firebase:", err));
         },
 
-        // Salva no localStorage (cache local)
+        
         save() {
             localStorage.setItem('trackers_stats_v2', JSON.stringify(this.data));
         },
 
-        // Atualiza a interface (placar se estiver aberto)
+        
         updateUI() {
             const overlay = document.getElementById('scoreboard-overlay');
             if (overlay.style.display === 'flex') {
@@ -653,16 +643,14 @@
             }
         },
 
-        // ===== FUNÇÕES QUE VOCÊ JÁ USAVA (mantidas com mesmo nome) =====
-
-        // Incrementa JOGADAS (visitas) – atômico no Firebase
+        
         addPlay() {
-            // Atualiza local (otimista)
+           
             this.data.plays++;
             this.save();
             this.updateUI();
 
-            // Transação atômica no Firebase
+          
             const ref = db.ref('stats/plays');
             ref.transaction((current) => {
                 return (current || 0) + 1;
@@ -677,7 +665,7 @@
             });
         },
 
-        // Incrementa final de volúpia
+    
         addVolupia(type) {
             if (this.data.volupia[type] === undefined) return;
             // Atualiza local
@@ -685,7 +673,7 @@
             this.save();
             this.updateUI();
 
-            // Transação atômica no Firebase
+         
             const ref = db.ref(`stats/volupia/${type}`);
             ref.transaction((current) => {
                 return (current || 0) + 1;
@@ -698,7 +686,7 @@
             });
         },
 
-        // Incrementa crush conquistado (até dois)
+      
         addEnding(targetId1, targetId2 = null) {
             if (targetId1 && this.data.targets[targetId1] !== undefined) {
                 this.data.targets[targetId1]++;
@@ -715,13 +703,11 @@
         }
     };
 
-    // ================================================================
-    // FUNÇÃO PARA ABRIR/FECHAR O PLACAR (agora sincroniza com Firebase)
-    // ================================================================
+ 
     function toggleScoreboard() {
         const overlay = document.getElementById('scoreboard-overlay');
         if (overlay.style.display === 'none') {
-            // Sincroniza com Firebase antes de mostrar
+          
             STATS.syncFromFirebase();
             overlay.style.display = 'flex';
         } else {
@@ -729,13 +715,7 @@
         }
     }
 
-    // ================================================================
-    // TODO O RESTO DO SEU JOGO PERMANECE EXATAMENTE IGUAL
-    // ================================================================
-    // A partir daqui, todo o seu código original (ASSETS, TEXTOS, CONFIG,
-    // ESTADO, AUDIO, BANCO_PERSONAGENS, MOTOR, CENAS, CHAT, etc.)
-    // DEVE SER COLADO ABAIXO. NADA FOI ALTERADO.
-    // ================================================================
+   
 
     const ASSETS = {
         UBER_SVG: `<svg viewBox="0 0 160 80" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:auto;"><rect x="12" y="26" width="136" height="34" fill="#2a2a2a" rx="2"/><rect x="20" y="16" width="80" height="18" fill="#3a3a3a" rx="2"/><rect x="22" y="14" width="76" height="6" fill="#4a4a4a" rx="1"/><rect x="26" y="18" width="16" height="12" fill="#88ccff" rx="1"/><rect x="48" y="18" width="16" height="12" fill="#88ccff" rx="1"/><rect x="70" y="18" width="16" height="12" fill="#88ccff" rx="1"/><rect x="28" y="20" width="6" height="2" fill="rgba(255,255,255,0.3)"/><rect x="50" y="20" width="6" height="2" fill="rgba(255,255,255,0.3)"/><rect x="72" y="20" width="6" height="2" fill="rgba(255,255,255,0.3)"/><rect x="8" y="32" width="8" height="6" fill="#ffee00" rx="1"/><rect x="144" y="32" width="8" height="6" fill="#ff4444" rx="1"/><rect x="6" y="30" width="4" height="10" fill="#ffaa00" rx="1"/><rect x="150" y="30" width="4" height="10" fill="#cc2222" rx="1"/><rect x="16" y="34" width="6" height="12" fill="#555" rx="1"/><rect x="16" y="40" width="6" height="2" fill="#777"/><rect x="32" y="58" width="18" height="14" fill="#111" rx="2"/><rect x="36" y="60" width="10" height="10" fill="#444" rx="1"/><rect x="38" y="62" width="6" height="6" fill="#666" rx="1"/><rect x="110" y="58" width="18" height="14" fill="#111" rx="2"/><rect x="114" y="60" width="10" height="10" fill="#444" rx="1"/><rect x="116" y="62" width="6" height="6" fill="#666" rx="1"/><rect x="16" y="46" width="128" height="2" fill="#444"/><rect x="22" y="50" width="116" height="2" fill="#555"/><rect x="0" y="18" width="16" height="2" fill="rgba(255,255,255,0.3)"/><rect x="4" y="28" width="22" height="2" fill="rgba(255,255,255,0.25)"/><rect x="0" y="38" width="26" height="2" fill="rgba(255,255,255,0.2)"/><rect x="80" y="12" width="18" height="2" fill="rgba(255,255,255,0.25)"/><rect x="90" y="22" width="14" height="2" fill="rgba(255,255,255,0.2)"/></svg>`,
@@ -758,18 +738,18 @@
 
     const TEXTOS = {
         apresentacao: "O caradura é expressão genuína da atualidade; sua aplicação é infalível e ninguém resiste à sua força! Caradura é filho legítimo da Ilustríssima Excelentíssima Senhora Dona Sem-Vergonha e do célebre espanhol D. Descarado Sem Ninguna Pinga de Las Ditas, rapaz fino e de boa educação, tira partido de tudo e sabe levar a água ao seu moinho! Caio do imaginário bêbado popular coletivo.",
-        rua_inicio: "Rua Augusta. Frio do Centro. Antes da festa, precisa fazer o corre.",
-        rua_retorno: "Você voltou para o ar frio da Rua Augusta. A Trackers está logo ali.",
-        festa_chegada: "Prédio abandonado na esquina da Dom José de Barros. O elevador não funciona. Techno estourando. É a Voodoohop na Trackers! O que você quer fazer?",
+        rua_inicio: "Frio do Centro. Antes da festa, precisa fazer o corre.",
+        rua_retorno: "Você voltou para a rua. A Trackers está logo ali.",
+        festa_chegada: "Prédio abandonado na esquina da Dom José de Barros. O elevador não funciona. Techno estourando. Voodoohop na Trackers! O que você quer fazer?",
         festa_retorno: "Você está de volta à festa na Trackers! O que você quer fazer?",
         explorar_predio: "🏢 Você está na Trackers, um prédio art déco histórico. Para onde você quer ir?",
         carlos_aparece: "🎭 CARLOS CAPSLOCK APARECEU! Ele começa a dançar de forma alucinante! A música fica INSANA!",
         carlos_foge: "💨 Carlos Capslock sumiu pulando para o lado direito! Onde será que ele foi?",
         carlos_retorna: "🎭 Carlos Capslock volta! Com um brilho estranho nos olhos... 'Quer experimentar uns comprimidos? É pra ficar LOUCO!'",
         carlos_aceitou: "💊 VOCÊ ACEITOU! Carlos se aproxima e vocês começam a dançar LOUCAMENTE! Vocês estão em outra dimensão!",
-        carlos_onda: "🌀 Vocês dançaram por horas! Carlos já foi embora. Você ganhou +20 AXÉ e +15 de Flerte!",
+        carlos_onda: "🌀 Vocês dançaram por horas! Carlos Capslock já foi embora e você se perguntou se ele era real ou não. Você ganhou +20 AXÉ e +15 de Flerte!",
         carlos_recusou: "❌ Você recusou os comprimidos. Carlos Capslock fica bravo! 'Tá bom, fica aí na sua onda careta então!'",
-        carlos_recusou_fuga: "😤 Carlos Capslock sumiu. Você perdeu a chance de uma experiência única... Mas pelo menos está sóbrio.",
+        carlos_recusou_fuga: "😤 Carlos Capslock sumiu. Você perdeu a chance de uma experiência única...",
         pista_arraso: "Sua Performance da Dança do Acasalamento foi um sucesso absoluto na Trackers!",
         pista_dancando: "Balançando no ritmo! (+5 AXÉ) Continue na pista fazendo a Performance da Dança do Acasalamento!",
         alvo_sucesso: "te notou e vocês dançaram juntos a noite toda na Trackers!",
@@ -1245,7 +1225,7 @@
                     <button class="floor-btn" onclick="CENAS.trackers._explorarAndar(1)">🚽 Banheiro (Obrigado por jogar!)</button>
                     <button class="floor-btn" onclick="CENAS.trackers._explorarAndar(3)">🚧 EM BREVE (Esta demo termina aqui)</button>
                     <button class="floor-btn" onclick="CENAS.trackers._explorarAndar(5)">🚧 EM BREVE (Estou exausto...)</button>
-                    <button class="floor-btn" onclick="CENAS.trackers._explorarAndar(7)">🚧 EM BREVE (Mais de 1 mês desenvolvendo)</button>
+                    <button class="floor-btn" onclick="CENAS.trackers._explorarAndar(7)">🚧 EM BREVE (Mais de 2 mês desenvolvendo)</button>
                     <button class="floor-btn" onclick="CENAS.trackers._explorarAndar(10)">🚧 EM BREVE (Tudo feito com carinho)</button>
                     <button class="floor-btn" style="border-color:#ff1493;" onclick="CENAS.trackers._explorarAndar('telhado')">🔮 EM BREVE (Aguarde a versão final!)</button>
                     <button class="floor-btn back-btn" onclick="CENAS.trackers._menuTrackers()">🔙 Voltar para a Festa</button>
@@ -1950,7 +1930,7 @@
                                 'moreno': "Deixou o Moreno no bar e sumiu na fumaça.",
                                 'volatille': "Fugiu do Volatille antes que as coisas ficassem loucas.",
                                 'ruivo': "Deixou o Ruivo esperando com o copo na mão.",
-                                'negro': "Você inventou uma desculpa e saiu de perto do Negro.",
+                                'negro': "Você inventou uma desculpa e saiu de perto.",
                                 'thomas': "Thomas riu enquanto você dava meia volta."
                             };
                             MOTOR.typeText(escapeTexts[ESTADO.currentCrush] || "Você amarelou e foi embora.", () => MOTOR.carregarCena('trackers'));
@@ -2064,7 +2044,7 @@
                 document.getElementById('visual-area').appendChild(scene);
 
                 ESTADO.uiBlocked = true;
-                MOTOR.typeText('Caramba, que tontura... O chão tá girando rápido demais! 🤢 DEU PT! Você bebeu todas e foi resgatado pela ambulância!', () => {
+                MOTOR.typeText('🤢 DEU PT! Você bebeu todas e foi resgatado pela ambulância!', () => {
                     ESTADO.uiBlocked = false;
                     MOTOR.renderMenu([{ icon: '🔄', text: 'JOGAR NOVAMENTE', action: () => { location.reload(); }, full: true }]);
                 });
@@ -2230,7 +2210,7 @@
                     </svg>
                 `;
                 document.getElementById('visual-area').appendChild(bedContainer); ESTADO.uiBlocked = false;
-                MOTOR.typeText(`${t1.name} e ${t2.name} te convidaram para o apartamento. Vocês aproveitaram a noite toda em um trisal maravilhoso!`, () => {
+                MOTOR.typeText(`${t1.name} e ${t2.name} te convidaram para o apartamento deles. Vocês fizeram MUITA PUTARIA até de Manhã!`, () => {
                     MOTOR.renderMenu([{ icon: '🔄', text: 'JOGAR NOVAMENTE', action: () => { location.reload(); }, full: true }]);
                 });
             }
@@ -2314,9 +2294,7 @@
         }
     };
 
-    // =====================================================================
-    // LÓGICA DO TERMINAL P2P (CHAT INTEGRADO)
-    // =====================================================================
+    
     const topicId = "mamba_negra_terminal_p2p_v3_2026";
     const wsUrl = `wss://ntfy.sh/${topicId}/ws`;
     const postUrl = `https://ntfy.sh/${topicId}`;
@@ -2339,7 +2317,7 @@
         chatSocket = new WebSocket(wsUrl);
         
         chatSocket.onopen = function() {
-            appendChatMessage("Info", "[Sistema] Túnel criptografado estabelecido.");
+            appendChatMessage("Info", "[Sistema] Isso não é feitiçaria, é tecnologia!");
         };
         
         chatSocket.onmessage = function(event) {
@@ -2432,9 +2410,7 @@
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
 
-    // ================================================================
-    // INICIALIZAÇÃO
-    // ================================================================
+
     document.addEventListener('DOMContentLoaded', function() {
         // Garantir que os SVGs existam
         const stage = document.getElementById('stage');
@@ -2457,7 +2433,7 @@
         document.getElementById('mamba-chat-overlay').style.display = 'none';
         document.getElementById('boot-screen').style.display = 'flex';
 
-        // Inicializa as estatísticas (lê do Firebase)
+
         STATS.init();
     });
 
