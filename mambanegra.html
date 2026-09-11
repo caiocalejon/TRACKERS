@@ -5,17 +5,13 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 
-
 <title>ERROR 666</title>
 <meta name="description" content="Terminal Underground da Mamba Negra. Acesse a rede P2P, confira os próximos eventos e a rádio oficial.">
 <meta name="author" content="CALEJON">
 
-
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
 
-
 <link rel="canonical" href="https://caiocalejon.github.io/TRACKERS/mambanegra">
-
 
 <meta property="og:locale" content="pt_BR">
 <meta property="og:type" content="website">
@@ -25,12 +21,10 @@
 <meta property="og:image" content="https://caiocalejon.github.io/TRACKERS/666.gif">
 <meta property="og:site_name" content="Mamba Negra">
 
-
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="MAMBA NEGRA | Terminal Underground P2P">
 <meta name="twitter:description" content="Terminal Underground da Mamba Negra. Acesse a rede P2P e confira os próximos eventos.">
 <meta name="twitter:image" content="https://caiocalejon.github.io/TRACKERS/666.gif">
-
 
 <script type="application/ld+json">
 {
@@ -60,43 +54,55 @@ CAIOCALEJON@GMAIL.COM
       background: #b3d4fc;
       text-shadow: none;
     }
+    
     body, html {
       height: 100%;
-      overflow: hidden;
+      /* Permite rolagem em telas muito pequenas na vertical, evitando corte de texto */
+      overflow-y: auto; 
+      overflow-x: hidden;
       padding: 0;
       margin: 0;
+      background: #0000aa; /* Fundo movido para a raiz para garantir cobertura total */
     }
+    
     body {
-      background: #0000aa; /* Cor azul clássica da BSOD */
       color: #ffffff;
-      font-family: courier;
-      font-size: 12pt;
+      font-family: courier, monospace;
+      font-size: 16px;
       text-align: center;
-      margin: 100px;
-      margin-top: 14%;
+      /* Substituição de margins fixas por paddings fluidos baseados no viewport */
+      padding: 10vh 5vw; 
+      box-sizing: border-box;
     }
+    
     .neg {
       background: #fff;
       color: #0000aa;
       padding: 2px 8px;
       font-weight: bold;
+      display: inline-block;
+      margin-bottom: 10px;
     }
+    
     p {
-      margin: 30px 100px;
+      /* Margens verticais mantidas, laterais automáticas para centralizar o bloco */
+      margin: 30px auto; 
       text-align: left;
-      width: 650px;
-      margin-left: auto;
-      margin-right: auto;
+      /* Ocupa a tela toda no mobile, mas trava em 650px no desktop */
+      width: 100%; 
+      max-width: 650px; 
+      box-sizing: border-box;
+      line-height: 1.4;
     }
+    
     a, a:hover {
       color: inherit;
       font: inherit;
       text-decoration: none;
+      display: inline-block;
+      margin-top: 20px;
     }
-    .menu {
-      text-align: center;
-      margin-top: 50px;
-    }
+    
     @-webkit-keyframes blinker {
       0% { visibility: visible; }
       50% { visibility: hidden; }
@@ -111,9 +117,19 @@ CAIOCALEJON@GMAIL.COM
       -webkit-animation: blinker steps(1) 1s infinite;
       animation: blinker steps(1) 1s infinite;
     }
+
+    /* Otimização fina para telas de celulares muito pequenos */
+    @media screen and (max-width: 480px) {
+      body {
+        font-size: 14px;
+        padding: 15vh 20px;
+      }
+      p {
+        margin: 20px auto;
+      }
+    }
   </style>
 </head>
-
 
 <body onkeyup="bsod()" onclick="bsod()">
 
@@ -128,10 +144,9 @@ CAIOCALEJON@GMAIL.COM
     &nbsp; lose unsaved information in any programs that are running.
   </p>
   
-  <a href="home.html">Press any key to continue <blink>_</blink></a>
+  <a href="javascript:void(0)">Press any key to continue <blink>_</blink></a>
   
   <script>
-
     function bsod() {
       window.location.href = 'https://caiocalejon.github.io/TRACKERS/mambanegra_index';
     }
