@@ -1,0 +1,1502 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>CALEJON OS — Caio Calejon Portfolio</title>
+<meta name="theme-color" content="#0000aa">
+<link rel="icon" href="https://favicon.cargocollective.com/29722-1790906450.ico">
+<link rel="stylesheet" href="https://unpkg.com/98.css">
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=Pixelify+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+    --win-teal:#008080;--win-gray:#c0c0c0;--win-blue:#000080;
+    --win-blue-light:#1084d0;--win-dark-gray:#808080;--os-accent:#ff00aa;
+    --font-pixel: 'Pixelify Sans', 'VT323', monospace;
+    --fs-base: 16px; --fs-small: 14px; --fs-tiny: 12px;
+    --fs-title: 15px; --fs-menu: 14px; --fs-taskbar: 15px;
+    --cargo-header-offset: 90px;
+    --taskbar-h: 40px;
+}
+*{box-sizing:border-box;}
+body,html{
+    margin:0;padding:0;width:100vw;height:100vh;overflow:hidden;
+    font-family:var(--font-pixel);background:#000;user-select:none;
+    font-size:var(--fs-base);-webkit-tap-highlight-color:transparent;
+    overscroll-behavior:auto;touch-action:manipulation;
+}
+button, input, textarea, select { font-family: var(--font-pixel); }
+
+/* BIOS */
+#bios-screen{position:absolute;inset:0;background:#000;color:#c8c8c8;font-family:'VT323',var(--font-pixel),monospace;font-size:1.05rem;line-height:1.35;padding:24px 32px;z-index:9999;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;touch-action:pan-y;}
+#bios-screen::-webkit-scrollbar{width:8px;}
+#bios-screen::-webkit-scrollbar-track{background:#111;}
+#bios-screen::-webkit-scrollbar-thumb{background:#00aa00;}
+.bios-line{margin:1px 0;opacity:0;animation:appear .01s forwards;white-space:pre-wrap;}
+.bios-line.head{color:#fff;font-weight:bold;}
+.bios-line.dim{color:#808080;}
+.bios-line.ok{color:#00ff00;}
+.bios-line.accent{color:#ff00aa;font-weight:bold;}
+.blinking-cursor{display:inline-block;width:9px;height:1rem;background:#c8c8c8;animation:blink .8s step-end infinite;vertical-align:bottom;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+@keyframes appear{to{opacity:1}}
+
+/* BOOT */
+#boot-screen{position:absolute;inset:0;background:#000;z-index:9998;display:none;flex-direction:column;justify-content:center;align-items:center;color:#fff;}
+.boot-logo-container{display:flex;align-items:center;gap:32px;flex-wrap:wrap;justify-content:center;}
+.os-logo{width:120px;height:120px;object-fit:contain;image-rendering:pixelated;filter:drop-shadow(0 0 18px var(--os-accent));}
+.boot-text h1{margin:0;font-size:4.4rem;font-weight:400;letter-spacing:3px;}
+.boot-text h2{margin:0;font-size:2rem;color:#ff00aa;font-weight:400;letter-spacing:8px;}
+.loading-bar-container{margin-top:48px;width:340px;max-width:80vw;height:24px;border:2px solid #666;background:#000;position:relative;overflow:hidden;}
+.loading-blocks{height:100%;width:80px;background:linear-gradient(90deg,transparent 0%,#ff00aa 20%,#ff00ff 50%,#ff00aa 80%,transparent 100%);position:absolute;left:-80px;animation:slide 1.5s linear infinite;}
+@keyframes slide{0%{left:-80px}100%{left:100%}}
+
+/* DESKTOP */
+#desktop{position:absolute;inset:0;background:var(--win-teal);display:none;overflow:hidden;}
+.icon-grid{position:relative;padding:0;height:calc(100% - var(--taskbar-h));width:100%;overflow:hidden;touch-action:none;}
+.desktop-icon{position:absolute;width:90px;display:flex;flex-direction:column;align-items:center;text-align:center;cursor:pointer;touch-action:none;user-select:none;}
+.desktop-icon.dragging{opacity:.75;z-index:9999;}
+.desktop-icon .icon-img{width:46px;height:46px;margin-bottom:4px;filter:drop-shadow(2px 2px 0 rgba(0,0,0,.5));display:flex;align-items:center;justify-content:center;pointer-events:none;}
+.desktop-icon .icon-img svg{width:100%;height:100%;shape-rendering:crispEdges;}
+.desktop-icon .icon-text{color:#fff;font-size:var(--fs-tiny);padding:2px 4px;border:1px dotted transparent;text-shadow:1px 1px 1px #000;word-wrap:break-word;line-height:1.2;pointer-events:none;}
+.desktop-icon.selected .icon-text{background:var(--win-blue);border:1px dotted #fff;text-shadow:none;}
+
+/* TASKBAR */
+#taskbar{position:absolute;bottom:0;left:0;width:100%;height:var(--taskbar-h);background:var(--win-gray);border-top:2px solid #fff;display:flex;align-items:center;padding:0 4px;z-index:10000;box-shadow:inset 0 1px 0 rgba(255,255,255,.8);}
+.start-btn{display:flex;align-items:center;gap:8px;font-weight:bold;padding:2px 12px;height:32px;font-size:var(--fs-taskbar);cursor:pointer;flex-shrink:0;}
+.tray-logo{border-radius:2px;width:22px;height:22px;}
+.taskbar-divider{width:2px;height:26px;border-left:1px solid #808080;border-right:1px solid #fff;margin:0 6px;flex-shrink:0;}
+#taskbar-apps{flex-grow:1;display:flex;gap:4px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;}
+.taskbar-app-btn{height:32px;min-width:130px;max-width:200px;display:flex;align-items:center;gap:6px;font-size:var(--fs-small);text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 8px;flex-shrink:0;}
+.taskbar-app-btn .taskbar-icon{width:18px;height:18px;flex-shrink:0;}
+.taskbar-app-btn .taskbar-icon svg{width:100%;height:100%;shape-rendering:crispEdges;}
+.taskbar-app-btn.active{box-shadow:inset 1px 1px #000,inset -1px -1px #fff,inset 2px 2px #808080,inset -2px -2px #dfdfdf;background:#e4e4e4;background-image:radial-gradient(#808080 20%,transparent 20%);background-size:2px 2px;font-weight:bold;}
+.system-tray{border:2px solid;border-color:#808080 #fff #fff #808080;padding:2px 10px;display:flex;align-items:center;gap:12px;height:28px;font-size:var(--fs-small);position:relative;flex-shrink:0;}
+.tray-icon{cursor:pointer;font-size:16px;}
+#volume-popup{position:absolute;bottom:var(--taskbar-h);right:10px;width:130px;background:var(--win-gray);border:2px solid;border-color:#fff #000 #000 #fff;padding:10px;display:none;flex-direction:column;align-items:center;gap:10px;z-index:10002;box-shadow:2px 2px 5px rgba(0,0,0,.5);}
+#volume-popup label{font-size:var(--fs-small);font-weight:bold;}
+.volume-slider{writing-mode:bt-lr;-webkit-appearance:slider-vertical;width:20px;height:100px;}
+
+/* START MENU */
+#start-menu{position:absolute;bottom:var(--taskbar-h);left:0;width:270px;max-width:90vw;background:var(--win-gray);border:2px solid;border-color:#fff #000 #000 #fff;display:none;z-index:10001;box-shadow:3px 3px 6px rgba(0,0,0,.5);max-height:calc(100vh - var(--taskbar-h) - 10px);overflow:hidden;}
+.start-menu-sidebar{width:32px;background:linear-gradient(to bottom,#ff00aa,#000080);position:absolute;top:2px;bottom:2px;left:2px;display:flex;align-items:flex-end;padding-bottom:8px;}
+.start-menu-sidebar span{color:#fff;font-weight:bold;font-size:17px;transform:rotate(-90deg);transform-origin:left bottom;white-space:nowrap;margin-left:22px;letter-spacing:1px;}
+.start-menu-items{margin-left:34px;padding:2px;display:flex;flex-direction:column;max-height:calc(100vh - var(--taskbar-h) - 20px);overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.start-menu-item{padding:9px 12px;display:flex;align-items:center;gap:12px;cursor:pointer;font-size:var(--fs-menu);}
+.start-menu-item .sm-icon{width:20px;height:20px;flex-shrink:0;}
+.start-menu-item .sm-icon svg{width:100%;height:100%;shape-rendering:crispEdges;}
+.start-menu-item:hover{background:var(--win-blue);color:#fff;}
+.start-menu-divider{height:2px;border-top:1px solid #808080;border-bottom:1px solid #fff;margin:4px 2px;}
+
+/* JANELAS */
+.window-container{position:absolute;display:none;min-width:280px;min-height:200px;max-width:calc(100vw - 4px);max-height:calc(100vh - var(--taskbar-h) - 4px);touch-action:pan-y;}
+.window-container.active{display:block;}
+.window-container.minimized{display:none!important;}
+.window-container.maximized{top:0!important;left:0!important;width:100vw!important;height:calc(100vh - var(--taskbar-h))!important;max-width:100vw!important;max-height:calc(100vh - var(--taskbar-h))!important;}
+.window{width:100%;height:100%;display:flex;flex-direction:column;box-shadow:2px 2px 10px rgba(0,0,0,.4);position:relative;}
+
+/* ═══ TITLE BAR — ROSA → AZUL ═══ */
+.title-bar,
+.window .title-bar,
+.window-container .title-bar,
+div.title-bar{
+    cursor:move;
+    background:#ff00aa !important;
+    background-image:linear-gradient(90deg,
+        #ff00aa 0%,
+        #d020b0 30%,
+        #7020a0 55%,
+        #000080 80%,
+        #000080 100%) !important;
+    background-repeat:no-repeat !important;
+    background-size:100% 100% !important;
+    touch-action:none;
+}
+.title-bar-text{
+    font-size:var(--fs-title) !important;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    color:#fff;
+    font-weight:bold;
+    text-shadow:1px 1px 1px rgba(0,0,0,.5);
+}
+.title-bar-text .title-icon{width:18px;height:18px;flex-shrink:0;}
+.title-bar-text .title-icon svg{width:100%;height:100%;shape-rendering:crispEdges;}
+
+.window-body{flex-grow:1;overflow:hidden;margin:0;padding:6px;background:#c0c0c0;display:flex;flex-direction:column;min-height:0;touch-action:pan-y;}
+
+/* BOTÕES min/max/close */
+.title-bar-controls{display:flex;gap:2px;padding:2px;flex-shrink:0;}
+.title-bar-controls button{
+    width:16px !important; height:14px !important;
+    min-width:16px !important; min-height:14px !important;
+    padding:0 !important;
+    background:#c0c0c0 !important;
+    border:2px solid !important;
+    border-top-color:#fff !important;
+    border-left-color:#fff !important;
+    border-right-color:#404040 !important;
+    border-bottom-color:#404040 !important;
+    display:flex !important; align-items:center !important; justify-content:center !important;
+    cursor:pointer !important;
+    background-image:none !important;
+    box-shadow:none !important;
+}
+.title-bar-controls button::before,
+.title-bar-controls button::after{content:none !important;display:none !important;}
+.title-bar-controls button:hover{background:#d0d0d0 !important;}
+.title-bar-controls button:active{
+    border-top-color:#404040 !important;
+    border-left-color:#404040 !important;
+    border-right-color:#fff !important;
+    border-bottom-color:#fff !important;
+    background:#a8a8a8 !important;
+}
+.title-bar-controls button svg{width:8px;height:8px;display:block;shape-rendering:crispEdges;}
+.title-bar-controls button svg rect{fill:#000;}
+.title-bar-controls button svg rect[stroke]{stroke:#000;}
+
+/* WEBVIEW */
+.webview-wrap{display:flex;flex-direction:column;height:100%;background:#fff;min-height:0;touch-action:pan-y;}
+.webview-toolbar{
+    display:flex;align-items:center;gap:6px;
+    background:var(--win-gray);border-bottom:1px solid #808080;
+    padding:4px 6px;font-size:var(--fs-small);flex-wrap:wrap;flex-shrink:0;
+}
+.webview-toolbar .nav-btn{
+    display:flex;align-items:center;justify-content:center;gap:4px;
+    height:26px;min-width:32px;padding:0 8px;
+    background:#c0c0c0;color:#000;border:2px solid;
+    border-top-color:#fff;border-left-color:#fff;
+    border-right-color:#404040;border-bottom-color:#404040;
+    cursor:pointer;font-size:13px;
+}
+.webview-toolbar .nav-btn:hover{background:#d0d0d0;}
+.webview-toolbar .nav-btn:active{border-top-color:#404040;border-left-color:#404040;border-right-color:#fff;border-bottom-color:#fff;}
+.webview-toolbar .nav-btn svg{width:14px;height:14px;shape-rendering:crispEdges;}
+.webview-toolbar .url-label{color:#000;font-family:var(--font-pixel);}
+
+.webview-frame-wrap{flex-grow:1;background:#fff;border:2px inset #fff;overflow:hidden;position:relative;min-height:0;touch-action:pan-y pan-x;}
+.webview-frame-wrap iframe{
+    width:100%;height:calc(100% + var(--cargo-header-offset));
+    margin-top:calc(-1 * var(--cargo-header-offset));
+    border:0;display:block;background:#fff;
+    touch-action:pan-y pan-x !important;
+    -webkit-overflow-scrolling:touch;
+}
+.webview-blocked-msg{position:absolute;inset:0;display:none;flex-direction:column;justify-content:center;align-items:center;background:#c0c0c0;padding:24px;text-align:center;gap:12px;font-size:var(--fs-small);color:#000;z-index:5;}
+.webview-blocked-msg.show{display:flex;}
+.btn-cargo{background:#000080;color:#fff;border:2px outset #4a4aff;font-weight:bold;padding:8px 16px;cursor:pointer;font-size:var(--fs-small);}
+
+/* ═══ EXPLORER — grade uniforme ═══ */
+.explorer-toolbar{display:flex;gap:5px;padding:5px;background:var(--win-gray);border-bottom:1px solid #808080;margin-bottom:4px;align-items:center;flex-wrap:wrap;flex-shrink:0;}
+.explorer-address{display:flex;align-items:center;gap:5px;padding:3px 8px;background:#fff;border:1px inset #808080;flex-grow:1;min-width:100px;font-size:var(--fs-small);}
+.explorer-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(90px, 1fr));
+    grid-auto-rows:100px;              /* ← altura fixa (corrige desordem) */
+    gap:10px;
+    padding:10px;
+    background:#fff;
+    flex-grow:1;
+    overflow-y:auto;
+    overflow-x:hidden;
+    border:2px inset #fff;
+    -webkit-overflow-scrolling:touch;
+    touch-action:pan-y;
+    min-height:0;
+    align-content:start;
+}
+.explorer-item{
+    width:100%;height:100%;
+    display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+    text-align:center;cursor:pointer;padding:4px;
+    border:1px dotted transparent;
+    overflow:hidden;
+    touch-action:manipulation;
+}
+.explorer-item:hover,.explorer-item:active{background:#000080;color:#fff;border-color:#fff;}
+.explorer-item .item-icon{width:38px;height:38px;margin-bottom:4px;flex-shrink:0;}
+.explorer-item .item-icon svg{width:100%;height:100%;shape-rendering:crispEdges;}
+.explorer-item .item-name{
+    font-size:var(--fs-tiny);
+    line-height:1.15;
+    word-break:break-word;
+    overflow:hidden;
+    display:-webkit-box;
+    -webkit-line-clamp:2;
+    -webkit-box-orient:vertical;
+}
+
+/* MEDIA PLAYER */
+.media-player-container{display:flex;flex-direction:row;height:100%;background:#1a1a1a;min-height:0;}
+.media-main{flex-grow:1;display:flex;flex-direction:column;min-width:0;min-height:0;}
+.media-screen{flex-grow:1;background:#000;border:2px inset #444;display:flex;justify-content:center;align-items:center;overflow:hidden;position:relative;min-height:0;}
+.media-screen video{width:100%;height:100%;object-fit:contain;background:#000;}
+.media-placeholder{color:#555;font-size:1.1rem;text-align:center;letter-spacing:2px;}
+.media-controls{display:flex;align-items:center;justify-content:center;gap:6px;padding:6px;background:var(--win-gray);border-top:2px solid #808080;flex-wrap:wrap;flex-shrink:0;}
+.media-controls button{min-width:42px;height:32px;font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.media-playlist{width:200px;flex-shrink:0;background:#d0d0d0;border-left:2px inset #808080;display:flex;flex-direction:column;min-height:0;}
+.playlist-header{background:linear-gradient(to right,#ff00aa,#000080);color:#fff;padding:4px 8px;font-size:13px;font-weight:bold;letter-spacing:1px;}
+.playlist-items{flex-grow:1;overflow-y:auto;background:#fff;border:2px inset #fff;-webkit-overflow-scrolling:touch;min-height:0;}
+.playlist-item{display:flex;align-items:center;gap:6px;padding:5px 8px;font-size:13px;cursor:pointer;border-bottom:1px solid #e0e0e0;}
+.playlist-item:hover{background:#c0c0ff;}
+.playlist-item.active{background:#000080;color:#fff;}
+.playlist-item .pl-icon{width:16px;height:16px;flex-shrink:0;}
+.playlist-item .pl-icon svg{width:100%;height:100%;shape-rendering:crispEdges;}
+.playlist-item .pl-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+/* IMAGE VIEWER */
+.image-viewer-body{display:flex;flex-direction:column;height:100%;min-height:0;}
+.image-display{flex-grow:1;background:#222;display:flex;justify-content:center;align-items:center;overflow:hidden;border:2px inset #fff;padding:10px;min-height:0;}
+.image-display img{max-width:100%;max-height:100%;object-fit:contain;image-rendering:pixelated;}
+
+/* NOTEPAD */
+.notepad-container{display:flex;flex-direction:column;height:100%;min-height:0;}
+.textarea-full{width:100%;flex-grow:1;resize:none;border:2px inset #fff;outline:none;font-family:'Courier New',monospace;padding:10px;font-size:15px;min-height:0;}
+.resize-handle{position:absolute;right:0;bottom:0;width:20px;height:20px;cursor:nwse-resize;z-index:10;background:linear-gradient(135deg,transparent 0 6px,#808080 6px 8px,transparent 8px 10px,#808080 10px 12px,transparent 12px 14px,#808080 14px 16px);opacity:.7;touch-action:none;}
+.resize-handle:hover{opacity:1;}
+
+/* RESPONSIVO TABLET */
+@media (max-width: 1024px) {
+    .desktop-icon { width: 82px; }
+    .desktop-icon .icon-img { width: 42px; height: 42px; }
+    .media-playlist { width: 180px; }
+}
+
+/* RESPONSIVO MOBILE */
+@media (max-width: 700px) {
+    :root {
+        --fs-base: 15px; --fs-small: 13px; --fs-tiny: 11px;
+        --fs-title: 13px; --fs-menu: 13px; --fs-taskbar: 13px;
+        --taskbar-h: 38px;
+    }
+    #taskbar { height: var(--taskbar-h); padding: 0 3px; }
+    .start-btn { height: 30px; font-size: 13px; padding: 2px 8px; }
+    .tray-logo { width: 18px; height: 18px; }
+    .taskbar-divider { margin: 0 3px; height: 22px; }
+    .taskbar-app-btn { height: 30px; min-width: 80px; max-width: 130px; font-size: 11px; padding: 0 6px; }
+    .system-tray { height: 26px; padding: 1px 6px; font-size: 11px; gap: 6px; }
+    #start-menu { width: 240px; }
+    .start-menu-item { padding: 8px 10px; font-size: 12px; gap: 8px; }
+
+    .desktop-icon { width: 76px; }
+    .desktop-icon .icon-img { width: 40px; height: 40px; }
+    .desktop-icon .icon-text { font-size: 10px; }
+
+    .title-bar-controls button {
+        width: 22px !important; height: 20px !important;
+        min-width: 22px !important; min-height: 20px !important;
+    }
+    .title-bar-controls button svg { width: 10px; height: 10px; }
+    .title-bar-text { font-size: 12px !important; }
+
+    .window-container { min-width: 260px; min-height: 180px; }
+    .window-body { padding: 4px; }
+    .resize-handle { width: 26px; height: 26px; }
+
+    .webview-toolbar { padding: 3px 4px; font-size: 11px; gap: 4px; }
+    .webview-toolbar .nav-btn { height: 24px; padding: 0 6px; font-size: 11px; }
+
+    .media-player-container { flex-direction: column; }
+    .media-playlist { width: 100%; height: 130px; border-left: 0; border-top: 2px inset #808080; }
+    .media-controls button { min-width: 36px; height: 28px; font-size: 14px; }
+
+    .explorer-grid{
+        grid-template-columns:repeat(3, 1fr);
+        grid-auto-rows:92px;
+        gap:6px;
+        padding:8px;
+        align-content:start;
+    }
+    .explorer-item .item-icon { width: 32px; height: 32px; }
+    .explorer-item .item-name { font-size: 10px; }
+}
+
+@media (max-width: 480px) {
+    .start-menu-sidebar { display:none; }
+    .start-menu-items { margin-left: 0; padding: 4px; }
+    #start-menu { width: 220px; }
+    .title-bar-text { max-width: calc(100vw - 110px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .explorer-grid { grid-template-columns: repeat(3, 1fr); }
+}
+</style>
+</head>
+<body>
+
+<!-- BIOS -->
+<div id="bios-screen">
+    <div class="bios-line head" style="animation-delay:.05s">CALEJON BIOS v3.4 — (C) 1988-2026 Caio Calejon</div>
+    <div class="bios-line dim" style="animation-delay:.12s">Energy Star Compliant — Portfolio Runtime System</div>
+    <div class="bios-line dim" style="animation-delay:.18s">══════════════════════════════════════════════════════════════</div>
+    <div class="bios-line" style="animation-delay:.30s">CPU    : Creative Pentium II(R) II 266MHz</div>
+    <div class="bios-line" style="animation-delay:.40s">Memory : 64MB OK</div>
+    <div class="bios-line dim" style="animation-delay:.55s">Detecting IDE drives ...</div>
+    <div class="bios-line" style="animation-delay:.65s">  Primary   Master  : CALEJON.DAT (Portfolio Database)</div>
+    <div class="bios-line" style="animation-delay:.75s">  Primary   Slave   : CAPSLOCK.AUD (Techno Audio Server)</div>
+    <div class="bios-line" style="animation-delay:.85s">  Secondary Master  : VOODOOHOP.VR (VR Synthesizer)</div>
+    <div class="bios-line" style="animation-delay:.95s">  Secondary Slave   : ITHA.DB (Anarchist Database)</div>
+    <div class="bios-line dim" style="animation-delay:1.15s">Mounting CARGO filesystem ...</div>
+    <div class="bios-line ok" style="animation-delay:1.25s">  [ OK ] /CALEJON/Caio-Calejon</div>
+    <div class="bios-line ok" style="animation-delay:1.32s">  [ OK ] /CALEJON/CARLOS-CAPSLOCK</div>
+    <div class="bios-line ok" style="animation-delay:1.39s">  [ OK ] /CALEJON/Web-Development</div>
+    <div class="bios-line ok" style="animation-delay:1.46s">  [ OK ] /CALEJON/GAMES-PIXEL-ART-VR</div>
+    <div class="bios-line ok" style="animation-delay:1.53s">  [ OK ] /CALEJON/PHOTOS</div>
+    <div class="bios-line ok" style="animation-delay:1.60s">  [ OK ] /CALEJON/CONTATO</div>
+    <div class="bios-line ok" style="animation-delay:1.67s">  [ OK ] /TRACKERS/ (external runtime)</div>
+    <div class="bios-line dim" style="animation-delay:1.85s">Mounting virtual drives ...</div>
+    <div class="bios-line ok" style="animation-delay:1.95s">  [ OK ] C:\  Meus Documentos</div>
+    <div class="bios-line ok" style="animation-delay:2.02s">  [ OK ] A:\  Disquete 3½</div>
+    <div class="bios-line ok" style="animation-delay:2.09s">  [ OK ] D:\  CD-ROM</div>
+    <div class="bios-line dim" style="animation-delay:2.25s">Initializing pixel icon engine ... <span class="ok">OK</span></div>
+    <div class="bios-line dim" style="animation-delay:2.35s">Initializing audio subsystem ...    <span class="ok">OK</span></div>
+    <div class="bios-line accent" style="animation-delay:2.5s">Starting CALEJON OS ...</div>
+    <div class="bios-line dim" style="animation-delay:2.7s;margin-top:12px;">Press DEL to enter SETUP  <span class="blinking-cursor"></span></div>
+</div>
+
+<!-- BOOT -->
+<div id="boot-screen">
+    <div class="boot-logo-container">
+        <img src="https://favicon.cargocollective.com/29722-1790906450.ico" alt="CALEJON OS" class="os-logo"
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+        <div style="display:none;width:120px;height:120px;background:linear-gradient(135deg,#ff00aa,#000080);border-radius:14px;align-items:center;justify-content:center;font-size:58px;color:#fff;">CC</div>
+        <div class="boot-text"><h1>CALEJON</h1><h2>OS</h2></div>
+    </div>
+    <div class="loading-bar-container"><div class="loading-blocks"></div></div>
+</div>
+
+<!-- DESKTOP -->
+<div id="desktop">
+    <div class="icon-grid" id="icon-grid"></div>
+    <div id="windows-container"></div>
+    <div id="volume-popup">
+        <label>Master Volume</label>
+        <input type="range" class="volume-slider" id="master-volume-slider" min="0" max="100" value="80">
+        <div style="font-size:12px;display:flex;gap:4px;align-items:center;">
+            <input type="checkbox" id="mute-checkbox"> <label for="mute-checkbox">Mute</label>
+        </div>
+    </div>
+    <div id="start-menu">
+        <div class="start-menu-sidebar"><span>CALEJON OS</span></div>
+        <div class="start-menu-items" id="start-menu-items"></div>
+    </div>
+    <div id="taskbar">
+        <button class="start-btn" id="start-btn">
+            <img src="https://favicon.cargocollective.com/29722-1790906450.ico" alt="" width="20" height="20" class="tray-logo"
+                 onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+            <span style="display:none;font-size:18px;">💾</span>
+            Iniciar
+        </button>
+        <div class="taskbar-divider"></div>
+        <div id="taskbar-apps"></div>
+        <div class="taskbar-divider"></div>
+        <div class="system-tray">
+            <span class="tray-icon" title="Volume" id="tray-volume">🔊</span>
+            <span id="clock">12:00</span>
+        </div>
+    </div>
+</div>
+
+<!-- TEMPLATES -->
+<div id="templates" style="display:none">
+
+    <div id="template-mycomputer">
+        <div style="display:flex;flex-direction:column;height:100%;min-height:0;">
+            <div class="explorer-toolbar">
+                <button data-action="renderExplorer" data-target="mycomputer">🏠 Meu Computador</button>
+                <div class="explorer-address"><span>Endereço:</span> <strong>Meu Computador</strong></div>
+            </div>
+            <div class="explorer-grid" id="mycomputer-grid"></div>
+        </div>
+    </div>
+
+    <div id="template-explorer">
+        <div style="display:flex;flex-direction:column;height:100%;min-height:0;">
+            <div class="explorer-toolbar">
+                <button data-action="navigateFolder" data-target="root">📁 Raíz</button>
+                <button data-action="navigateFolderUp">⬆ Subir</button>
+                <div class="explorer-address"><span>Endereço:</span> <strong id="explorer-current-path">C:\Meus Documentos</strong></div>
+            </div>
+            <div class="explorer-grid" id="explorer-file-list"></div>
+        </div>
+    </div>
+
+    <div id="template-mediaplayer">
+        <div class="media-player-container">
+            <div class="media-main">
+                <div class="media-screen">
+                    <video id="main-video-player" controls style="display:none;"></video>
+                    <div class="media-placeholder" id="media-placeholder">NO MEDIA LOADED</div>
+                </div>
+                <div class="media-controls">
+                    <button data-action="mediaPrev" title="Anterior">⏮</button>
+                    <button data-action="mediaPlay" title="Play">▶</button>
+                    <button data-action="mediaPause" title="Pause">⏸</button>
+                    <button data-action="mediaStop" title="Stop">⏹</button>
+                    <button data-action="mediaNext" title="Próximo">⏭</button>
+                </div>
+            </div>
+            <div class="media-playlist">
+                <div class="playlist-header">PLAYLIST</div>
+                <div class="playlist-items" id="playlist-items"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="template-imageviewer">
+        <div class="image-viewer-body">
+            <div class="explorer-toolbar">
+                <button data-action="prevImage">◀ Anterior</button>
+                <button data-action="nextImage">Próxima ▶</button>
+                <span id="image-counter" style="font-size:13px;margin-left:10px;">1 / 1</span>
+            </div>
+            <div class="image-display">
+                <img id="viewer-img-element" src="https://payload.cargocollective.com/1/0/29722/1679455/Photoautomat__1000.jpg" onerror="this.src='https://placehold.co/600x400/000080/FFFFFF?text=CALEJON+OS'">
+            </div>
+            <div style="background:var(--win-gray);padding:4px 8px;font-size:12px;border-top:1px solid #808080;" id="image-caption">CALEJON OS — Imagem</div>
+        </div>
+    </div>
+
+    <div id="template-notepad">
+        <div class="notepad-container">
+            <div style="padding:4px;background:var(--win-gray);border-bottom:2px solid #808080;display:flex;gap:6px;flex-wrap:wrap;">
+                <button data-action="newDoc">📄 Novo</button>
+                <button data-action="saveDoc">💾 Salvar</button>
+            </div>
+            <textarea id="notepad-textarea" class="textarea-full" spellcheck="false">Boas-vindas ao CALEJON OS V3.4.</textarea>
+        </div>
+    </div>
+
+</div>
+
+<script>
+/* ═══ J1 — ÍCONES 8-BIT ═══ */
+const PIXEL_ICONS = {
+    'about': `<svg viewBox="0 0 16 16" shape-rendering="crispEdges">
+    <!-- Cabelo -->
+    <rect x="4" y="0" width="8" height="1" fill="#1a0f08"/>
+    <rect x="3" y="1" width="10" height="1" fill="#1a0f08"/>
+    <rect x="3" y="2" width="2" height="2" fill="#1a0f08"/>
+    <rect x="11" y="2" width="2" height="2" fill="#1a0f08"/>
+    <!-- Rosto pardo -->
+    <rect x="5" y="2" width="6" height="1" fill="#a8703f"/>
+    <rect x="4" y="3" width="8" height="4" fill="#a8703f"/>
+    <rect x="5" y="7" width="6" height="1" fill="#a8703f"/>
+    <!-- Olhos -->
+    <rect x="5" y="4" width="1" height="1" fill="#000"/>
+    <rect x="10" y="4" width="1" height="1" fill="#000"/>
+    <!-- Nariz -->
+    <rect x="7" y="5" width="2" height="1" fill="#8a5528"/>
+    <!-- Bigode -->
+    <rect x="4" y="6" width="1" height="1" fill="#1a0f08"/>
+    <rect x="5" y="6" width="6" height="1" fill="#1a0f08"/>
+    <rect x="11" y="6" width="1" height="1" fill="#1a0f08"/>
+    <!-- Pescoço -->
+    <rect x="6" y="8" width="4" height="1" fill="#8a5528"/>
+    <!-- Camisa -->
+    <rect x="4" y="9" width="8" height="4" fill="#2c3e50"/>
+    <!-- Braços pardo -->
+    <rect x="2" y="9" width="2" height="4" fill="#a8703f"/>
+    <rect x="12" y="9" width="2" height="4" fill="#a8703f"/>
+    <!-- Calça jeans -->
+    <rect x="4" y="13" width="3" height="1" fill="#1a3a5c"/>
+    <rect x="9" y="13" width="3" height="1" fill="#1a3a5c"/>
+    <!-- All Star vermelho -->
+    <rect x="3" y="14" width="4" height="1" fill="#c0392b"/>
+    <rect x="9" y="14" width="4" height="1" fill="#c0392b"/>
+    <!-- Sola branca do All Star -->
+    <rect x="3" y="15" width="4" height="1" fill="#f0f0f0"/>
+    <rect x="9" y="15" width="4" height="1" fill="#f0f0f0"/>
+</svg>`,
+    'capslock': `<svg viewBox="0 0 16 16"><rect x="4" y="2" width="8" height="3" fill="#7fba00"/><rect x="3" y="4" width="10" height="6" fill="#7fba00"/><rect x="5" y="6" width="2" height="2" fill="#000"/><rect x="9" y="6" width="2" height="2" fill="#000"/><rect x="6" y="9" width="4" height="1" fill="#000"/><rect x="7" y="11" width="2" height="3" fill="#7fba00"/><rect x="5" y="13" width="6" height="1" fill="#7fba00"/><rect x="2" y="6" width="1" height="3" fill="#7fba00"/><rect x="13" y="6" width="1" height="3" fill="#7fba00"/></svg>`,
+    'webdev': `<svg viewBox="0 0 16 16"><rect x="4" y="1" width="8" height="1" fill="#00a4ef"/><rect x="2" y="2" width="12" height="1" fill="#00a4ef"/><rect x="1" y="3" width="14" height="10" fill="#00a4ef"/><rect x="4" y="13" width="8" height="1" fill="#00a4ef"/><rect x="2" y="4" width="4" height="3" fill="#7fba00"/><rect x="10" y="4" width="4" height="3" fill="#7fba00"/><rect x="7" y="7" width="2" height="6" fill="#7fba00"/><rect x="3" y="8" width="3" height="3" fill="#7fba00"/><rect x="10" y="8" width="3" height="3" fill="#7fba00"/><rect x="6" y="14" width="4" height="1" fill="#7fba00"/></svg>`,
+    'games': `<svg viewBox="0 0 16 16"><rect x="2" y="4" width="12" height="8" fill="#c0c0c0"/><rect x="3" y="3" width="2" height="1" fill="#c0c0c0"/><rect x="11" y="3" width="2" height="1" fill="#c0c0c0"/><rect x="4" y="6" width="1" height="3" fill="#000"/><rect x="3" y="7" width="3" height="1" fill="#000"/><rect x="10" y="6" width="1" height="1" fill="#f05025"/><rect x="12" y="7" width="1" height="1" fill="#ffb900"/><rect x="10" y="8" width="1" height="1" fill="#00a4ef"/><rect x="9" y="7" width="1" height="1" fill="#7fba00"/><rect x="6" y="10" width="4" height="1" fill="#000"/></svg>`,
+    'photos': `<svg viewBox="0 0 16 16"><rect x="1" y="4" width="14" height="10" fill="#2c3e50"/><rect x="1" y="4" width="14" height="1" fill="#1a1a1a"/><rect x="5" y="2" width="6" height="2" fill="#2c3e50"/><rect x="3" y="6" width="10" height="7" fill="#111"/><rect x="5" y="7" width="3" height="3" fill="#3498db"/><rect x="9" y="8" width="2" height="2" fill="#f1c40f"/><rect x="4" y="11" width="8" height="1" fill="#27ae60"/><rect x="12" y="3" width="2" height="1" fill="#e74c3c"/></svg>`,
+    'contact': `<svg viewBox="0 0 16 16"><rect x="1" y="3" width="14" height="10" fill="#f5f0dc"/><rect x="1" y="3" width="14" height="1" fill="#b8a880"/><rect x="1" y="12" width="14" height="1" fill="#b8a880"/><rect x="1" y="3" width="1" height="10" fill="#b8a880"/><rect x="14" y="3" width="1" height="10" fill="#b8a880"/><rect x="2" y="4" width="2" height="1" fill="#b8a880"/><rect x="4" y="5" width="2" height="1" fill="#b8a880"/><rect x="6" y="6" width="4" height="1" fill="#b8a880"/><rect x="10" y="5" width="2" height="1" fill="#b8a880"/><rect x="12" y="4" width="2" height="1" fill="#b8a880"/></svg>`,
+    'trackers': `<svg viewBox="0 0 16 16"><rect x="1" y="5" width="14" height="7" fill="#f05025"/><rect x="2" y="4" width="12" height="1" fill="#c0392b"/><rect x="3" y="6" width="10" height="5" fill="#1a1a1a"/><rect x="4" y="7" width="1" height="3" fill="#fff"/><rect x="3" y="8" width="3" height="1" fill="#fff"/><rect x="10" y="7" width="1" height="1" fill="#f1c40f"/><rect x="12" y="8" width="1" height="1" fill="#00a4ef"/><rect x="10" y="9" width="1" height="1" fill="#7fba00"/><rect x="12" y="7" width="1" height="1" fill="#f05025"/><rect x="5" y="12" width="6" height="2" fill="#f05025"/></svg>`,
+    'cargo': `<svg viewBox="0 0 16 16"><rect x="2" y="5" width="12" height="9" fill="#b8825a"/><rect x="2" y="5" width="12" height="1" fill="#8a5a3a"/><rect x="2" y="13" width="12" height="1" fill="#6a4020"/><rect x="2" y="5" width="1" height="9" fill="#8a5a3a"/><rect x="13" y="5" width="1" height="9" fill="#6a4020"/><rect x="7" y="5" width="2" height="9" fill="#d4a878"/><rect x="2" y="9" width="12" height="1" fill="#d4a878"/><rect x="3" y="2" width="10" height="3" fill="#f0e0c0"/><rect x="3" y="2" width="10" height="1" fill="#000080"/><rect x="3" y="4" width="10" height="1" fill="#000080"/><rect x="3" y="2" width="1" height="3" fill="#000080"/><rect x="12" y="2" width="1" height="3" fill="#000080"/><rect x="6" y="3" width="4" height="1" fill="#000080"/></svg>`,
+    'mycomputer': `<svg viewBox="0 0 16 16"><rect x="1" y="2" width="14" height="10" fill="#c0c0c0"/><rect x="2" y="3" width="12" height="8" fill="#000080"/><rect x="3" y="4" width="10" height="1" fill="#1084d0"/><rect x="3" y="6" width="6" height="1" fill="#fff"/><rect x="3" y="8" width="8" height="1" fill="#fff"/><rect x="5" y="12" width="6" height="2" fill="#808080"/><rect x="3" y="14" width="10" height="1" fill="#c0c0c0"/></svg>`,
+    'mydocs': `<svg viewBox="0 0 16 16"><rect x="1" y="4" width="5" height="2" fill="#d4a017"/><rect x="1" y="5" width="14" height="9" fill="#ffcc66"/><rect x="1" y="6" width="14" height="1" fill="#d4a017"/><rect x="1" y="14" width="14" height="1" fill="#a67c00"/><rect x="1" y="5" width="1" height="10" fill="#a67c00"/><rect x="14" y="5" width="1" height="10" fill="#a67c00"/><rect x="5" y="2" width="8" height="8" fill="#fff"/><rect x="5" y="2" width="8" height="1" fill="#000"/><rect x="5" y="9" width="8" height="1" fill="#000"/><rect x="5" y="2" width="1" height="8" fill="#000"/><rect x="12" y="2" width="1" height="8" fill="#000"/><rect x="7" y="4" width="5" height="1" fill="#000080"/><rect x="7" y="6" width="5" height="1" fill="#000080"/></svg>`,
+    'folder': `<svg viewBox="0 0 16 16"><rect x="1" y="4" width="5" height="2" fill="#d4a017"/><rect x="1" y="5" width="14" height="9" fill="#ffcc66"/><rect x="1" y="6" width="14" height="1" fill="#d4a017"/><rect x="1" y="14" width="14" height="1" fill="#a67c00"/><rect x="1" y="5" width="1" height="10" fill="#a67c00"/><rect x="14" y="5" width="1" height="10" fill="#a67c00"/><rect x="3" y="8" width="10" height="1" fill="#d4a017"/><rect x="3" y="10" width="8" height="1" fill="#d4a017"/></svg>`,
+    'folderProjects': `<svg viewBox="0 0 16 16"><rect x="1" y="4" width="5" height="2" fill="#2c6cb0"/><rect x="1" y="5" width="14" height="9" fill="#5b9bd5"/><rect x="1" y="6" width="14" height="1" fill="#2c6cb0"/><rect x="1" y="14" width="14" height="1" fill="#1a4a80"/><rect x="1" y="5" width="1" height="10" fill="#1a4a80"/><rect x="14" y="5" width="1" height="10" fill="#1a4a80"/><rect x="6" y="7" width="4" height="2" fill="#fff"/><rect x="6" y="10" width="4" height="2" fill="#fff"/></svg>`,
+    'folderImages': `<svg viewBox="0 0 16 16"><rect x="1" y="4" width="5" height="2" fill="#d4a017"/><rect x="1" y="5" width="14" height="9" fill="#ffcc66"/><rect x="1" y="6" width="14" height="1" fill="#d4a017"/><rect x="1" y="14" width="14" height="1" fill="#a67c00"/><rect x="1" y="5" width="1" height="10" fill="#a67c00"/><rect x="14" y="5" width="1" height="10" fill="#a67c00"/><rect x="4" y="7" width="8" height="6" fill="#87ceeb"/><rect x="4" y="10" width="8" height="3" fill="#4a9d4a"/><rect x="5" y="8" width="2" height="2" fill="#ffd700"/></svg>`,
+    'folderMusic': `<svg viewBox="0 0 16 16"><rect x="1" y="4" width="5" height="2" fill="#d4a017"/><rect x="1" y="5" width="14" height="9" fill="#ffcc66"/><rect x="1" y="6" width="14" height="1" fill="#d4a017"/><rect x="1" y="14" width="14" height="1" fill="#a67c00"/><rect x="1" y="5" width="1" height="10" fill="#a67c00"/><rect x="14" y="5" width="1" height="10" fill="#a67c00"/><rect x="6" y="7" width="1" height="6" fill="#000080"/><rect x="7" y="7" width="4" height="1" fill="#000080"/><rect x="7" y="12" width="3" height="1" fill="#000080"/><rect x="8" y="11" width="2" height="3" fill="#000080"/></svg>`,
+    'folderVideos': `<svg viewBox="0 0 16 16"><rect x="1" y="4" width="5" height="2" fill="#d4a017"/><rect x="1" y="5" width="14" height="9" fill="#ffcc66"/><rect x="1" y="6" width="14" height="1" fill="#d4a017"/><rect x="1" y="14" width="14" height="1" fill="#a67c00"/><rect x="1" y="5" width="1" height="10" fill="#a67c00"/><rect x="14" y="5" width="1" height="10" fill="#a67c00"/><rect x="4" y="7" width="6" height="1" fill="#000"/><rect x="4" y="7" width="1" height="6" fill="#000"/><rect x="9" y="7" width="1" height="6" fill="#000"/><rect x="4" y="12" width="6" height="1" fill="#000"/><rect x="4" y="9" width="2" height="1" fill="#000"/><rect x="8" y="9" width="2" height="1" fill="#000"/><rect x="10" y="8" width="3" height="4" fill="#c0392b"/></svg>`,
+    'folderDocs': `<svg viewBox="0 0 16 16"><rect x="1" y="4" width="5" height="2" fill="#d4a017"/><rect x="1" y="5" width="14" height="9" fill="#ffcc66"/><rect x="1" y="6" width="14" height="1" fill="#d4a017"/><rect x="1" y="14" width="14" height="1" fill="#a67c00"/><rect x="1" y="5" width="1" height="10" fill="#a67c00"/><rect x="14" y="5" width="1" height="10" fill="#a67c00"/><rect x="4" y="7" width="8" height="6" fill="#fff"/><rect x="5" y="8" width="6" height="1" fill="#000"/><rect x="5" y="10" width="6" height="1" fill="#000"/><rect x="5" y="11" width="4" height="1" fill="#000"/></svg>`,
+    'mediaplayer': `<svg viewBox="0 0 16 16"><rect x="1" y="3" width="14" height="10" fill="#1a1a1a"/><rect x="2" y="4" width="12" height="8" fill="#000"/><rect x="5" y="7" width="6" height="2" fill="#fff"/><rect x="3" y="13" width="2" height="1" fill="#606060"/><rect x="11" y="13" width="2" height="1" fill="#606060"/></svg>`,
+    'imageviewer': `<svg viewBox="0 0 16 16"><rect x="1" y="2" width="14" height="12" fill="#8b6914"/><rect x="2" y="3" width="12" height="10" fill="#f5f0dc"/><rect x="3" y="4" width="10" height="6" fill="#87ceeb"/><rect x="3" y="7" width="10" height="3" fill="#4a9d4a"/><rect x="4" y="4" width="2" height="2" fill="#ffd700"/></svg>`,
+    'notepad': `<svg viewBox="0 0 16 16"><rect x="2" y="1" width="12" height="14" fill="#fff"/><rect x="2" y="1" width="12" height="1" fill="#c0c0c0"/><rect x="2" y="14" width="12" height="1" fill="#c0c0c0"/><rect x="2" y="1" width="1" height="14" fill="#c0c0c0"/><rect x="13" y="1" width="1" height="14" fill="#c0c0c0"/><rect x="4" y="3" width="8" height="1" fill="#000080"/><rect x="4" y="5" width="8" height="1" fill="#000080"/><rect x="4" y="7" width="6" height="1" fill="#000080"/><rect x="4" y="9" width="8" height="1" fill="#000080"/><rect x="4" y="11" width="5" height="1" fill="#000080"/></svg>`,
+    'floppy': `<svg viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" fill="#1a1a1a"/><rect x="3" y="1" width="10" height="6" fill="#c0c0c0"/><rect x="4" y="2" width="8" height="4" fill="#808080"/><rect x="5" y="2" width="2" height="4" fill="#1a1a1a"/><rect x="3" y="9" width="10" height="5" fill="#f0f0f0"/><rect x="3" y="10" width="10" height="1" fill="#808080"/><rect x="4" y="12" width="3" height="1" fill="#808080"/></svg>`,
+    'cd': `<svg viewBox="0 0 16 16"><rect x="5" y="1" width="6" height="1" fill="#909090"/><rect x="3" y="2" width="10" height="1" fill="#c0c0c0"/><rect x="2" y="3" width="12" height="1" fill="#d8d8d8"/><rect x="1" y="4" width="14" height="1" fill="#e0e0e0"/><rect x="1" y="5" width="14" height="6" fill="#e8e8e8"/><rect x="1" y="11" width="14" height="1" fill="#e0e0e0"/><rect x="2" y="12" width="12" height="1" fill="#d8d8d8"/><rect x="3" y="13" width="10" height="1" fill="#c0c0c0"/><rect x="5" y="14" width="6" height="1" fill="#909090"/><rect x="3" y="6" width="10" height="1" fill="#a0c0ff"/><rect x="3" y="7" width="10" height="1" fill="#d0a0ff"/><rect x="3" y="8" width="10" height="1" fill="#ffa0c0"/><rect x="3" y="9" width="10" height="1" fill="#ffd0a0"/><rect x="5" y="6" width="6" height="4" fill="#f8f8f8"/><rect x="6" y="7" width="4" height="2" fill="#707070"/><rect x="7" y="7" width="2" height="1" fill="#303030"/></svg>`,
+    'hdd': `<svg viewBox="0 0 16 16"><rect x="1" y="4" width="14" height="9" fill="#c0c0c0"/><rect x="1" y="4" width="14" height="1" fill="#fff"/><rect x="1" y="12" width="14" height="1" fill="#606060"/><rect x="1" y="4" width="1" height="9" fill="#fff"/><rect x="14" y="4" width="1" height="9" fill="#606060"/><rect x="3" y="6" width="6" height="5" fill="#404040"/><rect x="10" y="7" width="2" height="1" fill="#00a4ef"/><rect x="10" y="9" width="2" height="1" fill="#f05025"/></svg>`,
+    'textFile': `<svg viewBox="0 0 16 16"><rect x="3" y="1" width="10" height="14" fill="#fff"/><rect x="3" y="1" width="10" height="1" fill="#000"/><rect x="3" y="14" width="10" height="1" fill="#000"/><rect x="3" y="1" width="1" height="14" fill="#000"/><rect x="12" y="1" width="1" height="14" fill="#000"/><rect x="5" y="4" width="6" height="1" fill="#000"/><rect x="5" y="6" width="6" height="1" fill="#000"/><rect x="5" y="8" width="6" height="1" fill="#000"/><rect x="5" y="10" width="4" height="1" fill="#000"/><rect x="5" y="12" width="6" height="1" fill="#000"/></svg>`,
+    'imageFile': `<svg viewBox="0 0 16 16"><rect x="2" y="2" width="12" height="12" fill="#fff"/><rect x="2" y="2" width="12" height="1" fill="#000"/><rect x="2" y="13" width="12" height="1" fill="#000"/><rect x="2" y="2" width="1" height="12" fill="#000"/><rect x="13" y="2" width="1" height="12" fill="#000"/><rect x="4" y="4" width="8" height="6" fill="#87ceeb"/><rect x="4" y="8" width="8" height="2" fill="#4a9d4a"/><rect x="5" y="5" width="2" height="2" fill="#ffd700"/></svg>`,
+    'audioFile': `<svg viewBox="0 0 16 16"><rect x="3" y="1" width="10" height="14" fill="#fff"/><rect x="3" y="1" width="10" height="1" fill="#000"/><rect x="3" y="14" width="10" height="1" fill="#000"/><rect x="3" y="1" width="1" height="14" fill="#000"/><rect x="12" y="1" width="1" height="14" fill="#000"/><rect x="5" y="4" width="1" height="7" fill="#000080"/><rect x="6" y="4" width="3" height="1" fill="#000080"/><rect x="6" y="10" width="3" height="1" fill="#000080"/><rect x="7" y="9" width="2" height="3" fill="#000080"/><rect x="5" y="6" width="2" height="1" fill="#000080"/><rect x="5" y="8" width="2" height="1" fill="#000080"/></svg>`,
+    'videoFile': `<svg viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="10" fill="#1a1a1a"/><rect x="2" y="3" width="12" height="1" fill="#606060"/><rect x="2" y="12" width="12" height="1" fill="#606060"/><rect x="2" y="3" width="1" height="10" fill="#606060"/><rect x="13" y="3" width="1" height="10" fill="#606060"/><rect x="5" y="5" width="1" height="1" fill="#fff"/><rect x="7" y="6" width="1" height="1" fill="#fff"/><rect x="9" y="5" width="1" height="1" fill="#fff"/><rect x="5" y="9" width="1" height="1" fill="#fff"/><rect x="9" y="9" width="1" height="1" fill="#fff"/><rect x="6" y="7" width="4" height="2" fill="#f05025"/></svg>`,
+    'exe': `<svg viewBox="0 0 16 16"><rect x="1" y="2" width="14" height="12" fill="#c0c0c0"/><rect x="1" y="2" width="14" height="2" fill="#000080"/><rect x="3" y="5" width="4" height="3" fill="#fff"/><rect x="4" y="6" width="2" height="1" fill="#000080"/><rect x="9" y="5" width="4" height="3" fill="#fff"/><rect x="10" y="6" width="2" height="1" fill="#000080"/><rect x="3" y="10" width="10" height="1" fill="#606060"/><rect x="3" y="12" width="6" height="1" fill="#606060"/></svg>`,
+    'file': `<svg viewBox="0 0 16 16"><rect x="3" y="1" width="10" height="14" fill="#fff"/><rect x="3" y="1" width="10" height="1" fill="#000"/><rect x="3" y="14" width="10" height="1" fill="#000"/><rect x="3" y="1" width="1" height="14" fill="#000"/><rect x="12" y="1" width="1" height="14" fill="#000"/></svg>`
+};
+
+/* ═══ J2 — BOTÕES DE JANELA ═══ */
+const WIN_BTN_ICONS = {
+    'min':   `<svg viewBox="0 0 8 8"><rect x="2" y="6" width="4" height="1" fill="#000"/></svg>`,
+    'max':   `<svg viewBox="0 0 8 8"><rect x="1" y="1" width="6" height="1" fill="#000"/><rect x="1" y="6" width="6" height="1" fill="#000"/><rect x="1" y="1" width="1" height="6" fill="#000"/><rect x="6" y="1" width="1" height="6" fill="#000"/><rect x="2" y="2" width="4" height="1" fill="#000"/></svg>`,
+    'close': `<svg viewBox="0 0 8 8"><rect x="1" y="1" width="1" height="1" fill="#000"/><rect x="6" y="1" width="1" height="1" fill="#000"/><rect x="2" y="2" width="1" height="1" fill="#000"/><rect x="5" y="2" width="1" height="1" fill="#000"/><rect x="3" y="3" width="2" height="2" fill="#000"/><rect x="2" y="5" width="1" height="1" fill="#000"/><rect x="5" y="5" width="1" height="1" fill="#000"/><rect x="1" y="6" width="1" height="1" fill="#000"/><rect x="6" y="6" width="1" height="1" fill="#000"/></svg>`,
+    'back':  `<svg viewBox="0 0 16 16"><rect x="10" y="3" width="2" height="10" fill="#000"/><rect x="8" y="5" width="2" height="6" fill="#000"/><rect x="6" y="7" width="2" height="2" fill="#000"/><rect x="4" y="6" width="2" height="1" fill="#000"/><rect x="4" y="9" width="2" height="1" fill="#000"/><rect x="4" y="7" width="2" height="2" fill="#000"/><rect x="2" y="5" width="2" height="6" fill="#000"/></svg>`
+};
+
+/* ═══ J3 — URLs ═══ */
+const CARGO_BASE = 'https://cargocollective.com/CALEJON';
+const CARGO_URLS = {
+    'cargo':    CARGO_BASE,
+    'about':    `${CARGO_BASE}/Caio-Calejon`,
+    'capslock': `${CARGO_BASE}/CARLOS-CAPSLOCK`,
+    'webdev':   `${CARGO_BASE}/Web-Development`,
+    'games':    `${CARGO_BASE}/GAMES-PIXEL-ART-VR-INTERACTIVE-PROJECTS`,
+    'photos':   `${CARGO_BASE}/PHOTOS`,
+    'contact':  `${CARGO_BASE}/CONTATO`
+};
+
+/* ═══ J4 — FILE SYSTEM ═══ */
+const FILE_SYSTEM = {
+    'mycomputer': {
+        name:'Meu Computador', type:'system',
+        items:[
+            { id:'c', name:'Disco Local (C:)', type:'drive', target:'root', icon:'hdd' },
+            { id:'a', name:'Disquete 3½ (A:)', type:'drive', soundOnly:'floppy', icon:'floppy' },
+            { id:'d', name:'Unidade CD (D:)', type:'drive', soundOnly:'cd', icon:'cd' }
+        ]
+    },
+    'root': {
+        name:'C:\\Meus Documentos', type:'folder',
+        items:[
+            { id:'p1', name:'Projetos', type:'folder', target:'projetos', icon:'folderProjects' },
+            { id:'p2', name:'Minhas Imagens', type:'folder', target:'imagens', icon:'folderImages' },
+            { id:'p3', name:'Minhas Músicas', type:'folder', target:'musicas', icon:'folderMusic' },
+            { id:'p4', name:'Meus Vídeos', type:'folder', target:'videos', icon:'folderVideos' },
+            { id:'p5', name:'Documentos & Textos', type:'folder', target:'textos', icon:'folderDocs' }
+        ]
+    },
+    'projetos': {
+        name:'C:\\Meus Documentos\\Projetos', parent:'root', type:'folder',
+        items:[
+            { id:'x1', name:'Caio_Calejon_Bio.exe', type:'app', targetApp:'about', icon:'exe' },
+            { id:'x2', name:'Carlos_Capslock.exe', type:'app', targetApp:'capslock', icon:'exe' },
+            { id:'x3', name:'ITHA_WebDevelopment.exe', type:'app', targetApp:'webdev', icon:'exe' },
+            { id:'x4', name:'Games_PixelArt_VR.exe', type:'app', targetApp:'games', icon:'exe' },
+            { id:'x5', name:'Photos_Underground.exe', type:'app', targetApp:'photos', icon:'exe' },
+            { id:'x6', name:'Contato.exe', type:'app', targetApp:'contact', icon:'exe' },
+            { id:'x7', name:'TRACKERS_TOWER.exe', type:'app', targetApp:'trackers', icon:'exe' }
+        ]
+    },
+    'imagens': {
+        name:'C:\\Meus Documentos\\Minhas Imagens', parent:'root', type:'folder',
+        items:[
+            { id:'i0', name:'Photoautomat.jpg', type:'image', icon:'imageFile', imgIndex:0 },
+            { id:'i1', name:'Berlin.jpg', type:'image', icon:'imageFile', imgIndex:1 },
+            { id:'i2', name:'Portao_SP.jpg', type:'image', icon:'imageFile', imgIndex:2 },
+            { id:'i3', name:'Dresden.jpg', type:'image', icon:'imageFile', imgIndex:3 },
+            { id:'i4', name:'Capslock_Mask.jpg', type:'image', icon:'imageFile', imgIndex:4 },
+            { id:'i5', name:'Buraco_Minhoca.jpg', type:'image', icon:'imageFile', imgIndex:5 },
+            { id:'i6', name:'666_Party.jpg', type:'image', icon:'imageFile', imgIndex:6 },
+            { id:'i7', name:'Heliodora.jpg', type:'image', icon:'imageFile', imgIndex:7 },
+            { id:'i8', name:'Side_Perspective.jpg', type:'image', icon:'imageFile', imgIndex:8 },
+            { id:'i9', name:'Bigode.jpg', type:'image', icon:'imageFile', imgIndex:9 },
+            { id:'i10',name:'Popporn_Paixao.jpg', type:'image', icon:'imageFile', imgIndex:10 },
+            { id:'i11',name:'Calejon.jpg', type:'image', icon:'imageFile', imgIndex:11 }
+        ]
+    },
+    'musicas': {
+        name:'C:\\Meus Documentos\\Minhas Músicas', parent:'root', type:'folder',
+        items:[
+            { id:'m1', name:'Capslock_Techno.wav', type:'audio', icon:'audioFile', synth:'techno' },
+            { id:'m2', name:'Voodoohop_Ambient.wav', type:'audio', icon:'audioFile', synth:'ambient' },
+            { id:'m3', name:'Paulo_Tessuto_Live.mp3', type:'audio', icon:'audioFile', synth:'techno' }
+        ]
+    },
+    'videos': {
+        name:'C:\\Meus Documentos\\Meus Vídeos', parent:'root', type:'folder',
+        items:[
+            { id:'v1', name:'Minhocao_Trackers.mp4', type:'video', icon:'videoFile', url:'https://caiocalejon.github.io/TRACKERS/minhocao.mp4' },
+            { id:'v2', name:'Red_Room_VR.mp4', type:'video', icon:'videoFile', url:'https://caiocalejon.github.io/TRACKERS/red.mp4' }
+        ]
+    },
+    'textos': {
+        name:'C:\\Meus Documentos\\Documentos & Textos', parent:'root', type:'folder',
+        items:[
+            { id:'t1', name:'Bio_Caio_Calejon.txt', type:'text', icon:'textFile', content:'CAIO CALEJON — Creative Technologist, Developer & Digital Artist\nSão Paulo, Brasil\n\nDesenvolvedor Web, Designer Digital, Pixel Artist, Criador de Games, 3D, Realidade Virtual (VR) e articulador da cultura underground e contracultura de São Paulo.' },
+            { id:'t2', name:'Manifesto_Utopico.txt', type:'text', icon:'textFile', content:'"En pocas palabras, si no eres un utópico, es que eres imbécil."' },
+            { id:'t3', name:'Carlos_Capslock_Historia.txt', type:'text', icon:'textFile', content:'CARLOS CAPSLOCK\n\nPersonagem criado pelo produtor e DJ PAULO TESSUTO. Realiza festas desde 2010.' },
+            { id:'t4', name:'Contato.txt', type:'text', icon:'textFile', content:'Caio Calejon\ncaiocalejon@gmail.com\n11 9759-47088' }
+        ]
+    }
+};
+
+/* ═══ J5 — PLAYLIST ═══ */
+const MEDIA_PLAYLIST = [
+    { name:'Capslock_Techno.wav', type:'audio', synth:'techno', icon:'audioFile' },
+    { name:'Voodoohop_Ambient.wav', type:'audio', synth:'ambient', icon:'audioFile' },
+    { name:'Paulo_Tessuto_Live.mp3', type:'audio', synth:'techno', icon:'audioFile' },
+    { name:'Minhocao_Trackers.mp4', type:'video', url:'https://caiocalejon.github.io/TRACKERS/minhocao.mp4', icon:'videoFile' },
+    { name:'Red_Room_VR.mp4', type:'video', url:'https://caiocalejon.github.io/TRACKERS/red.mp4', icon:'videoFile' }
+];
+
+/* ═══ J6 — GALERIA ═══ */
+const GALLERY_IMAGES = [
+    { url:'https://payload.cargocollective.com/1/0/29722/1679455/Photoautomat__1000.jpg', title:'Photoautomat' },
+    { url:'https://payload.cargocollective.com/1/0/29722/1679455/berlin_1000.jpg', title:'Berlin' },
+    { url:'https://payload.cargocollective.com/1/0/29722/1679455/portao_1000.jpg', title:'Portao SP' },
+    { url:'https://payload.cargocollective.com/1/0/29722/1679455/dresden_1000.jpg', title:'Dresden' },
+    { url:'https://payload.cargocollective.com/1/0/29722/1679455/capslock_MASK_664.jpg', title:'Capslock Mask' },
+    { url:'https://payload.cargocollective.com/1/0/29722/1679455/buraco_da_minhoca_1000.jpg', title:'Buraco da Minhoca' },
+    { url:'https://payload.cargocollective.com/1/0/29722/1679455/666_1000.jpg', title:'666 Party' },
+    { url:'https://payload.cargocollective.com/1/0/29722/1679455/heliodora_1000.jpg', title:'Heliodora' },
+    { url:'https://payload.cargocollective.com/1/0/29722/1679455/side_1000.jpg', title:'Side' },
+    { url:'https://payload.cargocollective.com/1/0/29722/1679455/bigode_1000.jpg', title:'Bigode' },
+    { url:'https://payload.cargocollective.com/1/0/29722/1679455/popporn_paixao-008_1000.jpg', title:'Popporn Paixao' },
+    { url:'https://payload.cargocollective.com/1/0/29722/1679455/calejon_1000.jpg', title:'Calejon' }
+];
+let currentImageIdx = 0;
+
+/* ═══ J7 — APPS ═══ */
+const APPS_DATA = {
+    'cargo':        { title:'Cargo — Caio Calejon',    icon:'cargo',       x:40,  y:30,  w:960,  h:680, url: CARGO_URLS['cargo'], showBack:true },
+    'about':        { title:'Caio Calejon',           icon:'about',       x:60,  y:40,  w:900,  h:640, url: CARGO_URLS['about'] },
+    'capslock':     { title:'CARLOS CAPSLOCK',         icon:'capslock',    x:40,  y:30,  w:900,  h:640, url: CARGO_URLS['capslock'] },
+    'webdev':       { title:'Web Development',         icon:'webdev',      x:60,  y:50,  w:900,  h:640, url: CARGO_URLS['webdev'] },
+    'games':        { title:'Games / VR / Pixel Art',  icon:'games',       x:80,  y:70,  w:900,  h:640, url: CARGO_URLS['games'] },
+    'photos':       { title:'Photos',                  icon:'photos',      x:100, y:40,  w:900,  h:640, url: CARGO_URLS['photos'] },
+    'contact':      { title:'CONTATO',                 icon:'contact',     x:200, y:100, w:800,  h:600, url: CARGO_URLS['contact'] },
+    'trackers':     { title:'TRACKERS TOWER',          icon:'trackers',    x:80,  y:60,  w:1000, h:720, url:'https://caiocalejon.github.io/TRACKERS/' },
+    'mycomputer':   { title:'Meu Computador',           icon:'mycomputer',  x:20,  y:20,  w:540,  h:400, template:'template-mycomputer' },
+    'explorer':     { title:'Meus Documentos',          icon:'mydocs',      x:50,  y:50,  w:680,  h:480, template:'template-explorer' },
+    'mediaplayer':  { title:'CALEJON Media Player',     icon:'mediaplayer', x:60,  y:50,  w:820,  h:560, template:'template-mediaplayer' },
+    'imageviewer':  { title:'Visualizador de Fotos',    icon:'imageviewer', x:160, y:120, w:600,  h:460, template:'template-imageviewer' },
+    'notepad':      { title:'Notepad',                  icon:'notepad',     x:240, y:140, w:540,  h:400, template:'template-notepad' }
+};
+
+const DESKTOP_LIST = ['cargo','about','capslock','webdev','games','photos','contact','trackers','explorer','mycomputer','mediaplayer','imageviewer','notepad'];
+
+const START_MENU = [
+    { app: 'cargo' },
+    { divider: true },
+    { app: 'about' }, { app: 'capslock' }, { app: 'webdev' }, { app: 'games' }, { app: 'photos' }, { app: 'contact' }, { app: 'trackers' },
+    { divider: true },
+    { app: 'mycomputer' }, { app: 'explorer' },
+    { divider: true },
+    { app: 'mediaplayer' }, { app: 'imageviewer' }, { app: 'notepad' },
+    { divider: true },
+    { action: 'shutdown' }
+];
+
+/* ═══ J8 — ESTADO ═══ */
+const OS_CONFIG = { zIndexCounter: 100 };
+const activeApps = {};
+const iconPositions = {};
+let currentFolderKey = 'root';
+let mediaPlayerState = { currentIndex: -1, pendingItem: null };
+
+/* ═══ J9 — RESPONSIVO HELPERS ═══ */
+function isMobileLayout(){ return window.innerWidth < 700; }
+function getTaskbarH(){
+    const v = getComputedStyle(document.documentElement).getPropertyValue('--taskbar-h').trim();
+    return parseInt(v) || 40;
+}
+function getResponsiveWindowRect(data){
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const taskH = getTaskbarH();
+    const availableH = vh - taskH - 8;
+    let w = data.w, h = data.h, x = data.x, y = data.y;
+    if (vw < 700){
+        w = vw - 8; h = availableH; x = 4; y = 4;
+    } else if (vw < 1024){
+        w = Math.min(data.w, vw - 40);
+        h = Math.min(data.h, availableH);
+        x = Math.max(10, Math.floor((vw - w) / 2) + (Math.random()*20-10));
+        y = 20 + Math.floor(Math.random()*15);
+    } else {
+        x = Math.max(10, data.x + (Math.random()*20-10));
+        y = Math.max(10, data.y + (Math.random()*20-10));
+    }
+    return { x, y, w, h };
+}
+
+/* ═══ J10 — ÁUDIO ═══ */
+let audioCtx = null, masterGain = null;
+function getAudioCtx(){
+    if (!audioCtx){
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        masterGain = audioCtx.createGain();
+        masterGain.gain.value = 0.8;
+        masterGain.connect(audioCtx.destination);
+    }
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+}
+function playFloppySound(){
+    try {
+        const ctx = getAudioCtx(); const now = ctx.currentTime;
+        for (let i = 0; i < 6; i++){
+            const t = now + i * 0.22;
+            const osc = ctx.createOscillator(), gain = ctx.createGain();
+            const noise = ctx.createOscillator(), noiseGain = ctx.createGain();
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(90, t);
+            osc.frequency.linearRampToValueAtTime(55, t + 0.16);
+            noise.type = 'sawtooth';
+            noise.frequency.setValueAtTime(380, t);
+            noise.frequency.linearRampToValueAtTime(200, t + 0.14);
+            noiseGain.gain.setValueAtTime(0.1, t);
+            noiseGain.gain.linearRampToValueAtTime(0.0001, t + 0.14);
+            gain.gain.setValueAtTime(0.0001, t);
+            gain.gain.linearRampToValueAtTime(0.55, t + 0.02);
+            gain.gain.linearRampToValueAtTime(0.42, t + 0.13);
+            gain.gain.linearRampToValueAtTime(0.0001, t + 0.2);
+            osc.connect(gain).connect(masterGain);
+            noise.connect(noiseGain).connect(masterGain);
+            osc.start(t); osc.stop(t + 0.2);
+            noise.start(t); noise.stop(t + 0.2);
+        }
+    } catch(e){ console.warn(e); }
+}
+function playCdSound(){
+    try {
+        const ctx = getAudioCtx(); const now = ctx.currentTime;
+        const dur = 3.0;
+        const osc = ctx.createOscillator(), gain = ctx.createGain();
+        const mod = ctx.createOscillator(), modGain = ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(1600, now);
+        osc.frequency.linearRampToValueAtTime(3400, now + 0.5);
+        osc.frequency.linearRampToValueAtTime(3000, now + dur);
+        mod.frequency.setValueAtTime(38, now);
+        modGain.gain.value = 300;
+        mod.connect(modGain).connect(osc.frequency);
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.linearRampToValueAtTime(0.2, now + 0.15);
+        gain.gain.linearRampToValueAtTime(0.15, now + dur - 0.5);
+        gain.gain.linearRampToValueAtTime(0.0001, now + dur);
+        osc.connect(gain).connect(masterGain);
+        mod.start(now); osc.start(now);
+        mod.stop(now + dur); osc.stop(now + dur);
+    } catch(e){ console.warn(e); }
+}
+function playSynthTechno(){
+    try {
+        const ctx = getAudioCtx(); const now = ctx.currentTime;
+        const bpm = 130, beat = 60 / bpm, half = beat / 2;
+        const notes = [55, 55, 82.4, 55, 55, 55, 65.4, 55];
+        for (let i = 0; i < 16; i++){
+            const t = now + i * half;
+            if (i % 4 === 0){
+                const k = ctx.createOscillator(), g = ctx.createGain();
+                k.frequency.setValueAtTime(150, t);
+                k.frequency.exponentialRampToValueAtTime(40, t + 0.1);
+                g.gain.setValueAtTime(0.6, t);
+                g.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
+                k.connect(g).connect(masterGain);
+                k.start(t); k.stop(t + 0.3);
+            }
+            if (i % 2 === 0){
+                const h = ctx.createOscillator(), g = ctx.createGain();
+                h.type = 'square'; h.frequency.value = 8500;
+                g.gain.setValueAtTime(0.04, t);
+                g.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
+                h.connect(g).connect(masterGain);
+                h.start(t); h.stop(t + 0.05);
+            }
+            const bf = notes[i % notes.length];
+            const b = ctx.createOscillator(), bg = ctx.createGain();
+            b.type = 'sawtooth'; b.frequency.value = bf;
+            bg.gain.setValueAtTime(0.001, t);
+            bg.gain.linearRampToValueAtTime(0.15, t + 0.01);
+            bg.gain.exponentialRampToValueAtTime(0.001, t + half * 0.9);
+            b.connect(bg).connect(masterGain);
+            b.start(t); b.stop(t + half);
+        }
+    } catch(e){ console.warn(e); }
+}
+function playPsychedelicAmbient(){
+    try {
+        const ctx = getAudioCtx(); const now = ctx.currentTime;
+        const freqs = [110, 164.81, 220, 277.18];
+        freqs.forEach((f, i) => {
+            const o = ctx.createOscillator(), g = ctx.createGain();
+            const lfo = ctx.createOscillator(), lg = ctx.createGain();
+            o.type = i % 2 ? 'sine' : 'triangle';
+            o.frequency.value = f;
+            lfo.frequency.value = 0.15 + i * 0.07;
+            lg.gain.value = 4;
+            lfo.connect(lg).connect(o.frequency);
+            g.gain.setValueAtTime(0.001, now);
+            g.gain.linearRampToValueAtTime(0.05, now + 1.5);
+            g.gain.linearRampToValueAtTime(0.001, now + 6);
+            o.connect(g).connect(masterGain);
+            o.start(now); lfo.start(now);
+            o.stop(now + 6.1); lfo.stop(now + 6.1);
+        });
+    } catch(e){ console.warn(e); }
+}
+
+/* ═══ J11 — BOOT ═══ */
+window.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+        document.getElementById('bios-screen').style.display = 'none';
+        document.getElementById('boot-screen').style.display = 'flex';
+        setTimeout(() => {
+            document.getElementById('boot-screen').style.display = 'none';
+            document.getElementById('desktop').style.display = 'block';
+            initOS();
+        }, 2200);
+    }, 3200);
+});
+
+function initOS(){
+    renderDesktopIcons();
+    makeDesktopIconsDraggable();
+    renderStartMenu();
+    startClock();
+    initVolumeControls();
+    bindGlobalEvents();
+    setTimeout(() => { appManager.openApp('cargo'); }, 400);
+}
+
+/* ═══ J12 — EVENTOS GLOBAIS ═══ */
+function bindGlobalEvents(){
+    document.getElementById('start-btn').addEventListener('click', toggleStartMenu);
+    document.getElementById('tray-volume').addEventListener('click', toggleVolumePopup);
+    document.addEventListener('mousedown', e => {
+        const sm = document.getElementById('start-menu');
+        const sb = document.getElementById('start-btn');
+        const vp = document.getElementById('volume-popup');
+        if (sm.style.display === 'block' && !sm.contains(e.target) && !sb.contains(e.target)) sm.style.display = 'none';
+        if (vp.style.display === 'flex' && !vp.contains(e.target) && !e.target.classList.contains('tray-icon')) vp.style.display = 'none';
+    });
+    document.body.addEventListener('click', handleGlobalClick);
+    document.body.addEventListener('dblclick', handleGlobalDblClick);
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', () => setTimeout(handleResize, 200));
+}
+function handleResize(){
+    repositionDesktopIcons();
+    const vw = window.innerWidth, vh = window.innerHeight;
+    const taskH = getTaskbarH();
+    for (const id in activeApps){
+        const el = document.getElementById(`win-${id}`);
+        if (!el) continue;
+        const st = activeApps[id];
+        if (st.maximized) continue;
+        if (st.x + st.w > vw){ st.x = Math.max(0, vw - st.w); el.style.left = st.x + 'px'; }
+        if (st.y + st.h > vh - taskH){ st.h = Math.max(180, vh - taskH - st.y - 4); el.style.height = st.h + 'px'; }
+        if (st.w > vw - 4){ st.w = vw - 4; el.style.width = st.w + 'px'; }
+    }
+}
+function handleGlobalClick(e){
+    const backBtn = e.target.closest('[data-webview-action="back"]');
+    if (backBtn){
+        const wrap = backBtn.closest('.webview-wrap');
+        const iframe = wrap ? wrap.querySelector('iframe') : null;
+        if (iframe){
+            try { iframe.contentWindow.history.back(); }
+            catch(_){ iframe.src = iframe.dataset.url || CARGO_BASE; }
+        }
+        return;
+    }
+    const wvBtn = e.target.closest('[data-webview-action]');
+    if (wvBtn){
+        const act = wvBtn.dataset.webviewAction;
+        const wrap = wvBtn.closest('.webview-wrap');
+        const iframe = wrap ? wrap.querySelector('iframe') : null;
+        const url = iframe ? iframe.dataset.url || iframe.src : null;
+        if (act === 'external' && url){ window.open(url, '_blank', 'noopener'); }
+        return;
+    }
+    const btn = e.target.closest('[data-action]');
+    if (btn){
+        const action = btn.dataset.action, target = btn.dataset.target;
+        switch (action){
+            case 'playTechno': playSynthTechno(); break;
+            case 'playAmbient': playPsychedelicAmbient(); break;
+            case 'openApp': appManager.openApp(target); break;
+            case 'closeApp': appManager.closeApp(target); break;
+            case 'prevImage': prevImage(); break;
+            case 'nextImage': nextImage(); break;
+            case 'renderExplorer': renderExplorerGrid(target, 'mycomputer'); break;
+            case 'navigateFolder': renderExplorerGrid(target); break;
+            case 'navigateFolderUp': navigateFolderUp(); break;
+            case 'newDoc': { const ta = document.getElementById('notepad-textarea'); if (ta) ta.value = ''; break; }
+            case 'saveDoc': alertMsg('Arquivo salvo.'); break;
+            case 'mediaPlay': mediaPlay(); break;
+            case 'mediaPause': mediaPause(); break;
+            case 'mediaStop': mediaStop(); break;
+            case 'mediaPrev': mediaPrev(); break;
+            case 'mediaNext': mediaNext(); break;
+        }
+        return;
+    }
+    const oa = e.target.closest('[data-open-app]');
+    if (oa && !oa.dataset.dragBound) appManager.openApp(oa.dataset.openApp);
+}
+function handleGlobalDblClick(e){
+    const oa = e.target.closest('[data-open-app]');
+    if (oa && !oa.dataset.dragBound) appManager.openApp(oa.dataset.openApp);
+}
+
+/* ═══ J13 — UI ═══ */
+function toggleStartMenu(){
+    const sm = document.getElementById('start-menu');
+    sm.style.display = sm.style.display === 'block' ? 'none' : 'block';
+}
+function toggleVolumePopup(){
+    const vp = document.getElementById('volume-popup');
+    vp.style.display = vp.style.display === 'flex' ? 'none' : 'flex';
+}
+function startClock(){
+    const el = document.getElementById('clock');
+    const upd = () => {
+        const n = new Date();
+        let h = n.getHours(); const m = String(n.getMinutes()).padStart(2,'0');
+        const ap = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12;
+        el.innerText = `${h}:${m} ${ap}`;
+    };
+    upd(); setInterval(upd, 1000);
+}
+function initVolumeControls(){
+    const s = document.getElementById('master-volume-slider');
+    const m = document.getElementById('mute-checkbox');
+    if (s) s.addEventListener('input', () => { if (masterGain) masterGain.gain.value = (s.value/100); });
+    if (m) m.addEventListener('change', () => { if (masterGain) masterGain.gain.value = m.checked ? 0 : (s.value/100); });
+}
+function alertMsg(t){ try{ alert(t);}catch(_){} }
+function shutdown(){
+    if (!confirm('Desligar o CALEJON OS?')) return;
+    document.getElementById('desktop').style.display = 'none';
+    const scr = document.getElementById('bios-screen');
+    scr.innerHTML = '<div class="bios-line head">CALEJON OS — Sistema desligado.</div><div class="bios-line dim" style="margin-top:10px;">Pode fechar esta aba com segurança.<span class="blinking-cursor" style="margin-left:6px;"></span></div>';
+    scr.style.display = 'block';
+}
+
+/* ═══ J14 — MENU INICIAR ═══ */
+function renderStartMenu(){
+    const container = document.getElementById('start-menu-items');
+    if (!container) return;
+    container.innerHTML = '';
+    START_MENU.forEach(item => {
+        if (item.divider){
+            const div = document.createElement('div');
+            div.className = 'start-menu-divider';
+            container.appendChild(div);
+            return;
+        }
+        const el = document.createElement('div');
+        el.className = 'start-menu-item';
+        if (item.app){
+            const app = APPS_DATA[item.app];
+            el.dataset.app = item.app;
+            el.innerHTML = `<span class="sm-icon">${PIXEL_ICONS[app.icon] || ''}</span> ${app.title}`;
+        } else if (item.action === 'shutdown'){
+            el.dataset.action = 'shutdown';
+            el.innerHTML = `<span class="sm-icon"><svg viewBox="0 0 16 16"><rect x="7" y="1" width="2" height="7" fill="#c0392b"/><rect x="2" y="4" width="2" height="2" fill="#c0392b"/><rect x="12" y="4" width="2" height="2" fill="#c0392b"/><rect x="3" y="6" width="1" height="5" fill="#c0392b"/><rect x="12" y="6" width="1" height="5" fill="#c0392b"/><rect x="4" y="11" width="8" height="1" fill="#c0392b"/><rect x="5" y="12" width="6" height="1" fill="#c0392b"/></svg></span> Desligar o Sistema...`;
+        }
+        el.addEventListener('click', () => {
+            if (item.app) appManager.openApp(item.app);
+            if (item.action === 'shutdown') shutdown();
+            toggleStartMenu();
+        });
+        container.appendChild(el);
+    });
+}
+
+/* ═══ J15 — ÍCONES DO DESKTOP ═══ */
+function renderDesktopIcons(){
+    const grid = document.getElementById('icon-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    const iconW = isMobileLayout() ? 76 : 90;
+    const iconH = isMobileLayout() ? 76 : 84;
+    const startX = 12, startY = 12;
+    const maxPerCol = Math.max(2, Math.floor((window.innerHeight - getTaskbarH() - 20) / iconH));
+
+    DESKTOP_LIST.forEach((appId, i) => {
+        const data = APPS_DATA[appId];
+        const icon = document.createElement('div');
+        icon.className = 'desktop-icon';
+        icon.dataset.appId = appId;
+        icon.dataset.dragBound = '1'; // avisa handlers globais
+
+        let x, y;
+        if (iconPositions[appId]){
+            x = iconPositions[appId].x;
+            y = iconPositions[appId].y;
+        } else {
+            const col = Math.floor(i / maxPerCol);
+            const row = i % maxPerCol;
+            x = startX + col * (iconW + 8);
+            y = startY + row * iconH;
+        }
+        icon.style.left = x + 'px';
+        icon.style.top = y + 'px';
+        icon.innerHTML = `
+            <div class="icon-img">${PIXEL_ICONS[data.icon] || ''}</div>
+            <div class="icon-text">${data.title}</div>
+        `;
+        grid.appendChild(icon);
+    });
+}
+function repositionDesktopIcons(){
+    if (!isMobileLayout()) return;
+    document.querySelectorAll('.desktop-icon').forEach(icon => {
+        const maxL = window.innerWidth - 80;
+        const maxT = window.innerHeight - getTaskbarH() - 80;
+        if (parseFloat(icon.style.left) > maxL) icon.style.left = Math.max(0, maxL) + 'px';
+        if (parseFloat(icon.style.top) > maxT) icon.style.top = Math.max(0, maxT) + 'px';
+    });
+}
+function makeDesktopIconsDraggable(){
+    document.querySelectorAll('.desktop-icon').forEach(icon => {
+        let sx=0, sy=0, sl=0, st=0, dragging=false, moved=false;
+        let lastTapTime = 0;
+        const appId = icon.dataset.appId;
+
+        icon.addEventListener('pointerdown', e => {
+            if (e.button && e.button !== 0) return;
+            dragging = true; moved = false;
+            sx = e.clientX; sy = e.clientY;
+            sl = icon.offsetLeft; st = icon.offsetTop;
+            try { icon.setPointerCapture(e.pointerId); } catch(_){}
+            icon.classList.add('dragging');
+
+            const move = ev => {
+                if (!dragging) return;
+                const dx = ev.clientX - sx, dy = ev.clientY - sy;
+                if (!moved && (Math.abs(dx) > 4 || Math.abs(dy) > 4)) moved = true;
+                if (moved){
+                    const maxL = window.innerWidth - 92;
+                    const maxT = window.innerHeight - getTaskbarH() - 92;
+                    icon.style.left = Math.max(0, Math.min(maxL, sl + dx)) + 'px';
+                    icon.style.top  = Math.max(0, Math.min(maxT, st + dy)) + 'px';
+                }
+            };
+
+            const up = () => {
+                dragging = false;
+                icon.classList.remove('dragging');
+                icon.removeEventListener('pointermove', move);
+                icon.removeEventListener('pointerup', up);
+                icon.removeEventListener('pointercancel', up);
+
+                if (moved){
+                    iconPositions[appId] = { x: icon.offsetLeft, y: icon.offsetTop };
+                    icon.dataset.justDragged = '1';
+                    setTimeout(()=>{ delete icon.dataset.justDragged; }, 200);
+                } else {
+                    // tap/click
+                    const now = Date.now();
+                    if (now - lastTapTime < 350){
+                        appManager.openApp(appId);
+                        lastTapTime = 0;
+                    } else {
+                        lastTapTime = now;
+                        document.querySelectorAll('.desktop-icon.selected').forEach(el => el.classList.remove('selected'));
+                        icon.classList.add('selected');
+                    }
+                }
+            };
+
+            icon.addEventListener('pointermove', move);
+            icon.addEventListener('pointerup', up, { once:true });
+            icon.addEventListener('pointercancel', up, { once:true });
+        });
+    });
+}
+
+/* ═══ J16 — APP MANAGER ═══ */
+const appManager = {
+    openApp(id){
+        const data = APPS_DATA[id];
+        if (!data) return;
+        if (activeApps[id]){
+            activeApps[id].minimized = false;
+            this.focusApp(id);
+            if (id === 'explorer') setTimeout(() => renderExplorerGrid(currentFolderKey), 20);
+            if (id === 'imageviewer') setTimeout(updateImageViewer, 20);
+            return;
+        }
+        const rect = getResponsiveWindowRect(data);
+        OS_CONFIG.zIndexCounter++;
+        activeApps[id] = {
+            id, zIndex: OS_CONFIG.zIndexCounter,
+            minimized:false, maximized:false,
+            x: rect.x, y: rect.y, w: rect.w, h: rect.h
+        };
+        this.renderWindow(id);
+        this.updateTaskbar();
+        if (id === 'explorer') setTimeout(() => renderExplorerGrid(currentFolderKey), 20);
+        if (id === 'mycomputer') setTimeout(() => renderExplorerGrid('mycomputer', 'mycomputer'), 20);
+        if (id === 'mediaplayer') setTimeout(() => renderMediaPlayer(), 20);
+        if (id === 'imageviewer') setTimeout(updateImageViewer, 30);
+    },
+    closeApp(id){
+        document.getElementById(`win-${id}`)?.remove();
+        if (id === 'explorer') currentFolderKey = 'root';
+        if (id === 'mediaplayer'){
+            const v = document.getElementById('main-video-player');
+            if (v){ try{v.pause();}catch(_){} }
+            mediaPlayerState = { currentIndex: -1, pendingItem: null };
+        }
+        delete activeApps[id];
+        this.updateTaskbar();
+    },
+    minimizeApp(id){ if (activeApps[id]){ activeApps[id].minimized = true; this.updateDOM(id); this.updateTaskbar(); } },
+    toggleMaximizeApp(id){ if (activeApps[id]){ activeApps[id].maximized = !activeApps[id].maximized; this.updateDOM(id); } },
+    focusApp(id){
+        if (!activeApps[id]) return;
+        OS_CONFIG.zIndexCounter++;
+        activeApps[id].zIndex = OS_CONFIG.zIndexCounter;
+        this.updateDOM(id); this.updateTaskbar();
+    },
+    updateDOM(id){
+        const el = document.getElementById(`win-${id}`);
+        if (!el) return;
+        const st = activeApps[id];
+        el.style.zIndex = st.zIndex;
+        el.classList.toggle('minimized', st.minimized);
+        el.classList.toggle('maximized', st.maximized);
+        const rh = el.querySelector('.resize-handle');
+        if (rh) rh.style.display = st.maximized ? 'none' : 'block';
+    },
+    renderWindow(id){
+        const data = APPS_DATA[id];
+        const inst = activeApps[id];
+        const container = document.getElementById('windows-container');
+        const winEl = document.createElement('div');
+        winEl.className = 'window-container active';
+        winEl.id = `win-${id}`;
+        Object.assign(winEl.style, {
+            left:`${inst.x}px`, top:`${inst.y}px`,
+            width:`${inst.w}px`, height:`${inst.h}px`,
+            zIndex: inst.zIndex
+        });
+        winEl.addEventListener('mousedown', () => this.focusApp(id));
+        winEl.addEventListener('touchstart', () => this.focusApp(id), {passive:true});
+
+        let content = '';
+        if (data.url) content = this.buildWebviewContent(data.url, data.showBack);
+        else {
+            const tpl = document.getElementById(data.template);
+            content = tpl ? tpl.innerHTML : '';
+        }
+        const titleIcon = PIXEL_ICONS[data.icon] || '';
+
+        winEl.innerHTML = `
+            <div class="window">
+                <div class="title-bar">
+                    <div class="title-bar-text">
+                        <span class="title-icon">${titleIcon}</span>
+                        ${data.title}
+                    </div>
+                    <div class="title-bar-controls">
+                        <button data-win-action="min" data-win-id="${id}" title="Minimizar">${WIN_BTN_ICONS.min}</button>
+                        <button data-win-action="max" data-win-id="${id}" title="Maximizar">${WIN_BTN_ICONS.max}</button>
+                        <button data-win-action="close" data-win-id="${id}" title="Fechar">${WIN_BTN_ICONS.close}</button>
+                    </div>
+                </div>
+                <div class="window-body">${content}</div>
+                <div class="resize-handle" data-resize-id="${id}"></div>
+            </div>
+        `;
+        winEl.querySelectorAll('[data-win-action]').forEach(btn => {
+            btn.addEventListener('click', ev => {
+                ev.stopPropagation();
+                const a = btn.dataset.winAction, wid = btn.dataset.winId;
+                if (a === 'min') this.minimizeApp(wid);
+                if (a === 'max') this.toggleMaximizeApp(wid);
+                if (a === 'close') this.closeApp(wid);
+            });
+        });
+        const titleBar = winEl.querySelector('.title-bar');
+        titleBar.addEventListener('dblclick', (e) => {
+            if (e.target.closest('button')) return;
+            this.toggleMaximizeApp(id);
+        });
+        container.appendChild(winEl);
+        this.makeDraggable(winEl, titleBar, id);
+        this.makeResizable(winEl, id);
+        if (data.url) this.initWebview(id, data.url);
+    },
+    buildWebviewContent(url, showBack){
+        const toolbar = showBack ? `
+            <div class="webview-toolbar">
+                <button class="nav-btn" data-webview-action="back" title="Voltar para a home">
+                    ${WIN_BTN_ICONS.back}
+                </button>
+                <span class="url-label">◀ Voltar para home Cargo</span>
+            </div>
+        ` : '';
+        return `
+            <div class="webview-wrap">
+                ${toolbar}
+                <div class="webview-frame-wrap">
+                    <iframe src="${url}" referrerpolicy="no-referrer"
+                            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"></iframe>
+                    <div class="webview-blocked-msg">
+                        <h3>⚠️ Visualizacao bloqueada</h3>
+                        <p>O site bloqueou a exibicao nesta janela.</p>
+                        <button class="btn-cargo" data-webview-action="external">↗ Abrir no navegador</button>
+                    </div>
+                </div>
+            </div>`;
+    },
+    initWebview(id, url){
+        const winEl = document.getElementById(`win-${id}`);
+        if (!winEl) return;
+        const iframe = winEl.querySelector('iframe');
+        if (!iframe) return;
+        iframe.dataset.url = url;
+        let loaded = false;
+        iframe.addEventListener('load', () => { loaded = true; });
+        setTimeout(() => {
+            try {
+                const doc = iframe.contentDocument || iframe.contentWindow?.document;
+                if (!doc || (doc.body && doc.body.innerHTML.trim() === '')) {
+                    winEl.querySelector('.webview-blocked-msg')?.classList.add('show');
+                }
+            } catch(e){}
+            setTimeout(() => {
+                if (!loaded) winEl.querySelector('.webview-blocked-msg')?.classList.add('show');
+            }, 3000);
+        }, 5000);
+    },
+    updateTaskbar(){
+        const tb = document.getElementById('taskbar-apps');
+        tb.innerHTML = '';
+        let topZ = -1, activeId = null;
+        for (const id in activeApps){
+            if (!activeApps[id].minimized && activeApps[id].zIndex > topZ){
+                topZ = activeApps[id].zIndex; activeId = id;
+            }
+        }
+        for (const id in activeApps){
+            const data = APPS_DATA[id];
+            const btn = document.createElement('button');
+            btn.className = `taskbar-app-btn ${id === activeId && !activeApps[id].minimized ? 'active' : ''}`;
+            btn.innerHTML = `<span class="taskbar-icon">${PIXEL_ICONS[data.icon] || ''}</span> ${data.title}`;
+            btn.addEventListener('click', () => {
+                if (activeApps[id].minimized){ activeApps[id].minimized = false; this.focusApp(id); }
+                else if (id === activeId) this.minimizeApp(id);
+                else this.focusApp(id);
+            });
+            tb.appendChild(btn);
+        }
+    },
+    makeDraggable(el, handle, id){
+        let lastX = 0, lastY = 0, dragging = false;
+        handle.addEventListener('pointerdown', e => {
+            if (e.target.closest('button')) return;
+            if (activeApps[id]?.maximized) return;
+            dragging = true;
+            try { handle.setPointerCapture(e.pointerId); } catch(_){}
+            lastX = e.clientX; lastY = e.clientY;
+            const move = ev => {
+                if (!dragging) return;
+                const dx = lastX - ev.clientX, dy = lastY - ev.clientY;
+                lastX = ev.clientX; lastY = ev.clientY;
+                let nl = el.offsetLeft - dx;
+                let nt = Math.max(0, Math.min(window.innerHeight - getTaskbarH() - 30, el.offsetTop - dy));
+                el.style.left = nl + 'px'; el.style.top = nt + 'px';
+                activeApps[id].x = nl; activeApps[id].y = nt;
+            };
+            const up = () => {
+                dragging = false;
+                handle.removeEventListener('pointermove', move);
+                handle.removeEventListener('pointerup', up);
+                handle.removeEventListener('pointercancel', up);
+            };
+            handle.addEventListener('pointermove', move);
+            handle.addEventListener('pointerup', up, { once:true });
+            handle.addEventListener('pointercancel', up, { once:true });
+        });
+    },
+    makeResizable(el, id){
+        const handle = el.querySelector('.resize-handle');
+        if (!handle) return;
+        let sx=0, sy=0, sw=0, sh=0, resizing=false;
+        handle.addEventListener('pointerdown', e => {
+            if (activeApps[id]?.maximized) return;
+            e.preventDefault(); e.stopPropagation();
+            resizing = true;
+            try { handle.setPointerCapture(e.pointerId); } catch(_){}
+            sx = e.clientX; sy = e.clientY;
+            sw = el.offsetWidth; sh = el.offsetHeight;
+            const move = ev => {
+                if (!resizing) return;
+                const nw = Math.max(280, sw + (ev.clientX - sx));
+                const nh = Math.max(180, sh + (ev.clientY - sy));
+                el.style.width = nw + 'px'; el.style.height = nh + 'px';
+                activeApps[id].w = nw; activeApps[id].h = nh;
+            };
+            const up = () => {
+                resizing = false;
+                handle.removeEventListener('pointermove', move);
+                handle.removeEventListener('pointerup', up);
+                handle.removeEventListener('pointercancel', up);
+            };
+            handle.addEventListener('pointermove', move);
+            handle.addEventListener('pointerup', up, { once:true });
+            handle.addEventListener('pointercancel', up, { once:true });
+        });
+    }
+};
+
+/* ═══ J17 — EXPLORER ═══ */
+function renderExplorerGrid(key, targetEl){
+    const folder = FILE_SYSTEM[key];
+    if (!folder) return;
+    if (targetEl !== 'mycomputer') currentFolderKey = key;
+    const listEl = targetEl === 'mycomputer'
+        ? document.getElementById('mycomputer-grid')
+        : document.getElementById('explorer-file-list');
+    const pathEl = document.getElementById('explorer-current-path');
+    if (pathEl && targetEl !== 'mycomputer') pathEl.innerText = folder.name;
+    if (!listEl) return;
+    listEl.innerHTML = '';
+    const frag = document.createDocumentFragment();
+    folder.items.forEach(item => {
+        const d = document.createElement('div');
+        d.className = 'explorer-item';
+        const svg = PIXEL_ICONS[item.icon] || PIXEL_ICONS.file;
+        d.innerHTML = `<div class="item-icon">${svg}</div><div class="item-name">${item.name}</div>`;
+        d.addEventListener('dblclick', () => openFsItem(item));
+        let lastTap = 0;
+        d.addEventListener('touchend', (e) => {
+            const now = Date.now();
+            if (now - lastTap < 350){ e.preventDefault(); openFsItem(item); lastTap = 0; }
+            else lastTap = now;
+        }, {passive:false});
+        frag.appendChild(d);
+    });
+    listEl.appendChild(frag);
+}
+function openFsItem(item){
+    if (item.type === 'drive'){
+        if (item.soundOnly === 'floppy'){ playFloppySound(); return; }
+        if (item.soundOnly === 'cd'){ playCdSound(); return; }
+        if (item.target){
+            appManager.openApp('explorer');
+            setTimeout(() => renderExplorerGrid(item.target), 30);
+        } else if (item.targetApp){
+            appManager.openApp(item.targetApp);
+        }
+        return;
+    }
+    if (item.type === 'folder'){ renderExplorerGrid(item.target); return; }
+    if (item.type === 'image'){ currentImageIdx = item.imgIndex || 0; appManager.openApp('imageviewer'); setTimeout(updateImageViewer, 30); return; }
+    if (item.type === 'audio'){ mediaPlayerState.pendingItem = item; appManager.openApp('mediaplayer'); return; }
+    if (item.type === 'video'){ mediaPlayerState.pendingItem = item; appManager.openApp('mediaplayer'); return; }
+    if (item.type === 'text'){
+        appManager.openApp('notepad');
+        setTimeout(()=>{ const ta = document.getElementById('notepad-textarea'); if (ta) ta.value = item.content; }, 60);
+        return;
+    }
+    if (item.type === 'app'){ appManager.openApp(item.targetApp); return; }
+}
+function navigateFolderUp(){
+    const f = FILE_SYSTEM[currentFolderKey];
+    if (f && f.parent) renderExplorerGrid(f.parent);
+}
+
+/* ═══ J18 — MEDIA PLAYER ═══ */
+function renderMediaPlayer(){
+    const listEl = document.getElementById('playlist-items');
+    if (!listEl) return;
+    listEl.innerHTML = '';
+    MEDIA_PLAYLIST.forEach((item, i) => {
+        const d = document.createElement('div');
+        d.className = 'playlist-item' + (i === mediaPlayerState.currentIndex ? ' active' : '');
+        d.innerHTML = `<span class="pl-icon">${PIXEL_ICONS[item.icon] || PIXEL_ICONS.file}</span><span class="pl-name">${item.name}</span>`;
+        d.addEventListener('click', () => { playMediaByIndex(i); });
+        listEl.appendChild(d);
+    });
+    if (mediaPlayerState.pendingItem){
+        const idx = MEDIA_PLAYLIST.findIndex(p => p.name === mediaPlayerState.pendingItem.name);
+        if (idx >= 0) playMediaByIndex(idx);
+        mediaPlayerState.pendingItem = null;
+    }
+}
+function playMediaByIndex(i){
+    const item = MEDIA_PLAYLIST[i];
+    if (!item) return;
+    mediaPlayerState.currentIndex = i;
+    document.querySelectorAll('#playlist-items .playlist-item').forEach((el, idx) => {
+        el.classList.toggle('active', idx === i);
+    });
+    const videoEl = document.getElementById('main-video-player');
+    const placeholder = document.getElementById('media-placeholder');
+    if (item.type === 'video' && item.url){
+        if (videoEl){
+            videoEl.style.display = 'block';
+            videoEl.src = item.url;
+            try { videoEl.play(); } catch(_){}
+        }
+        if (placeholder) placeholder.style.display = 'none';
+    } else if (item.type === 'audio'){
+        if (videoEl){ try{videoEl.pause();}catch(_){} videoEl.style.display = 'none'; videoEl.removeAttribute('src'); }
+        if (placeholder){ placeholder.style.display = 'block'; placeholder.textContent = '♪ ' + item.name; }
+        if (item.synth === 'ambient') playPsychedelicAmbient();
+        else playSynthTechno();
+    }
+}
+function mediaPlay(){
+    const item = MEDIA_PLAYLIST[mediaPlayerState.currentIndex];
+    const videoEl = document.getElementById('main-video-player');
+    if (item && item.type === 'video' && videoEl){ try { videoEl.play(); } catch(_){} }
+    else if (item && item.type === 'audio'){
+        if (item.synth === 'ambient') playPsychedelicAmbient(); else playSynthTechno();
+    } else if (MEDIA_PLAYLIST.length) playMediaByIndex(0);
+}
+function mediaPause(){
+    const videoEl = document.getElementById('main-video-player');
+    if (videoEl){ try { videoEl.pause(); } catch(_){} }
+}
+function mediaStop(){
+    const videoEl = document.getElementById('main-video-player');
+    if (videoEl){ try { videoEl.pause(); videoEl.currentTime = 0; } catch(_){} }
+    const placeholder = document.getElementById('media-placeholder');
+    if (placeholder) placeholder.textContent = 'NO MEDIA LOADED';
+}
+function mediaPrev(){
+    if (!MEDIA_PLAYLIST.length) return;
+    let i = mediaPlayerState.currentIndex - 1;
+    if (i < 0) i = MEDIA_PLAYLIST.length - 1;
+    playMediaByIndex(i);
+}
+function mediaNext(){
+    if (!MEDIA_PLAYLIST.length) return;
+    let i = mediaPlayerState.currentIndex + 1;
+    if (i >= MEDIA_PLAYLIST.length) i = 0;
+    playMediaByIndex(i);
+}
+
+/* ═══ J19 — IMAGE VIEWER ═══ */
+function updateImageViewer(){
+    const img = document.getElementById('viewer-img-element');
+    const counter = document.getElementById('image-counter');
+    const caption = document.getElementById('image-caption');
+    const data = GALLERY_IMAGES[currentImageIdx] || GALLERY_IMAGES[0];
+    if (img) img.src = data.url;
+    if (counter) counter.textContent = `${currentImageIdx + 1} / ${GALLERY_IMAGES.length}`;
+    if (caption) caption.textContent = 'CALEJON OS — ' + data.title;
+}
+function prevImage(){
+    currentImageIdx = (currentImageIdx - 1 + GALLERY_IMAGES.length) % GALLERY_IMAGES.length;
+    updateImageViewer();
+}
+function nextImage(){
+    currentImageIdx = (currentImageIdx + 1) % GALLERY_IMAGES.length;
+    updateImageViewer();
+}
+</script>
+</body>
+</html>
